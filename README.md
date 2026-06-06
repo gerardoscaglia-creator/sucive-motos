@@ -1,4 +1,4 @@
-# 🏍️ SUCIVE Motos · Inteligencia de Mercado (TrendLab)
+# 🏍️ SUCIVE Motos · Inteligencia de Mercado
 
 Dashboard online y **100% automático** de empadronamientos de motos (Cat. C) de Uruguay, por **marca × departamento × mes**. Pensado como herramienta de análisis para dueños/vendedores de motos. Cliente foco: **Rosas (Soriano)**.
 

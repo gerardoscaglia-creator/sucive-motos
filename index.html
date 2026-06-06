@@ -58,9 +58,9 @@
 </head>
 <body>
 <header>
-  <div class="brand"><div class="logo">TL</div>
+  <div class="brand"><div class="logo">🏍️</div>
     <div><h1>SUCIVE Motos · Inteligencia de Mercado</h1>
-      <div class="sub">Empadronamientos Cat. C · 19 departamentos · by TrendLab</div></div></div>
+      <div class="sub">Empadronamientos Cat. C · 19 departamentos</div></div></div>
   <div class="controls">
     <span class="tag">Depto:</span><select id="deptoSel"></select>
     <span class="tag">Marca:</span><select id="marcaSel"></select>
@@ -240,9 +240,9 @@ function renderHist(){
 }
 
 /* ===== MI EMPRESA (el cliente carga sus ventas) ===== */
-function loadEmp(){try{return JSON.parse(localStorage.getItem('sucive_miempresa'))||{empresa:'',data:{}};}catch(e){return {empresa:'',data:{}};}}
+function loadEmp(){try{const e=JSON.parse(localStorage.getItem('sucive_miempresa'))||{};e.data=e.data||{};return e;}catch(_){return {empresa:'',data:{}};}}
 function saveEmp(e){localStorage.setItem('sucive_miempresa',JSON.stringify(e));}
-function empName(v){const e=loadEmp();e.empresa=v;saveEmp(e);const s=document.querySelector('.sub');if(s)s.innerHTML='Empadronamientos Cat. C · 19 departamentos'+(v?' · <b style="color:var(--azul)">'+v+'</b>':' · by TrendLab');}
+function empName(v){const e=loadEmp();e.empresa=v;saveEmp(e);const s=document.querySelector('.sub');if(s)s.innerHTML='Empadronamientos Cat. C · 19 departamentos'+(v?' · <b style="color:var(--azul)">'+v+'</b>':'');}
 function empZona(v){const e=loadEmp();e.depto=v;saveEmp(e);renderEmpresa();}
 function empAdd(){const m=document.getElementById('empMarca').value;const u=parseInt(document.getElementById('empUnid').value,10)||0;if(!u)return;const e=loadEmp();e.data[DS.latest]=e.data[DS.latest]||{};e.data[DS.latest][m]=u;saveEmp(e);renderEmpresa();}
 function empDel(m){const e=loadEmp();if(e.data[DS.latest])delete e.data[DS.latest][m];saveEmp(e);renderEmpresa();}
@@ -275,6 +275,10 @@ function renderEmpresa(){
   const vende=new Set(entries.map(([m])=>m));
   const oportun=Object.entries(dObj.marcas).filter(([m])=>!vende.has(m)).slice(0,8);
   const noCap=Math.max(0,dObj.total-totalV);const recs=empRecs(zona,entries,dObj);
+  // termometro: gusto de la zona vs pais (indice = share local / share pais)
+  const termo=Object.entries(dObj.marcas).filter(([,v])=>v>=4).map(([m,v])=>{const local=dObj.total?v/dObj.total*100:0;const nac=(P.brand_stats[m]||{share:0}).share;return {m,local,nac,ifl:nac?local/nac:0};});
+  const sobre=termo.filter(t=>t.ifl>=1.2).sort((a,b)=>b.ifl-a.ifl).slice(0,5);
+  const sub=termo.filter(t=>t.ifl>0&&t.ifl<=0.8).sort((a,b)=>a.ifl-b.ifl).slice(0,5);
   const zonaOpts=DS.deptos.map(d=>`<option value="${d}"${d===zona?' selected':''}>${d}</option>`).join('');
   const marcaOpts=Object.keys(P.nac_marcas).map(m=>`<option value="${m}">${m}</option>`).join('');
   const nameVal=(emp.empresa||'').replace(/"/g,'&quot;');
@@ -298,6 +302,10 @@ function renderEmpresa(){
    </div>
    ${recs.length?`<div class="card" style="margin-top:14px"><h3>📋 Recomendaciones para tu negocio</h3>`+recs.map(r=>`<div style="display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--line)"><span style="font-size:18px;flex-shrink:0">${r.i}</span><span class="insight">${r.t}</span></div>`).join('')+`</div>`:''}
    ${DS.periods.length<2?`<div class="note" style="border-left-color:#fbbf24">📊 <b>Tendencia de modelos</b> (cuáles suben o bajan) se activa con el 2º mes de datos — aparece automáticamente el mes que viene.</div>`:''}
+   ${(sobre.length||sub.length)?`<div class="grid two" style="margin-top:14px">
+     <div class="card"><h3>🌡️ Lo que tu zona prefiere (más que el país)</h3>`+(sobre.length?`<table><thead><tr><th>Modelo</th><th class="num">Share ${zona}</th><th class="num">País</th><th class="num">Índice</th></tr></thead><tbody>`+sobre.map(t=>`<tr><td>${segBadge(segOf(t.m))} ${t.m}</td><td class="num">${t.local.toFixed(1)}%</td><td class="num">${t.nac.toFixed(1)}%</td><td class="num ifl-hi">${t.ifl.toFixed(2)}×</td></tr>`).join('')+`</tbody></table><div class="legend"><span>Tu zona los compra más que el promedio → asegurate de tenerlos.</span></div>`:'<div class="insight">—</div>')+`</div>
+     <div class="card"><h3>🧊 Lo que tu zona compra menos (que el país)</h3>`+(sub.length?`<table><thead><tr><th>Modelo</th><th class="num">Share ${zona}</th><th class="num">País</th><th class="num">Índice</th></tr></thead><tbody>`+sub.map(t=>`<tr><td>${segBadge(segOf(t.m))} ${t.m}</td><td class="num">${t.local.toFixed(1)}%</td><td class="num">${t.nac.toFixed(1)}%</td><td class="num ifl-lo">${t.ifl.toFixed(2)}×</td></tr>`).join('')+`</tbody></table><div class="legend"><span>Menos demanda local que el promedio nacional.</span></div>`:'<div class="insight">—</div>')+`</div>
+   </div>`:''}
    <div class="grid two" style="margin-top:14px">
      <div class="card"><h3>Tus modelos vs el mercado de ${zona}</h3>
        <table><thead><tr><th>Modelo</th><th class="num">Vendiste</th><th class="num">Mercado ${zona}</th><th class="num">No capturado</th><th class="num">Tu cuota</th><th>Lectura</th><th></th></tr></thead><tbody>`+
