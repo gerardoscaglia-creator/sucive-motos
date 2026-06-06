@@ -45,19 +45,49 @@ def parse_pdf(path):
     m = re.search(r"\b01/(\d{2})/(\d{4})", full)
     if m:
         periodo = f"{m.group(2)}-{m.group(1)}"
-    data = {}; cur = None
+    data = {}; subtotals = {}; cur = None
     for l in lines:
         # OJO: un departamento puede ocupar varias paginas y el encabezado se
         # repite. Usamos setdefault (no reset) para NO perder las marcas de la
         # primera pagina al reaparecer el header.
         if l in DEPTOS: cur = norm_depto(l); data.setdefault(cur, {}); continue
-        if l.lower().startswith("subtotal"): cur = None; continue
+        st = re.match(r"subtotal\s*(\d+)\s+(\d+)", l, re.I)
+        if st:
+            # el PDF imprime el subtotal oficial de cada depto: lo guardamos
+            # como control de integridad del parseo.
+            if cur: subtotals[cur] = int(st.group(1))
+            cur = None; continue
         # \s* permite nombres largos pegados al numero (ej "HARLEY DAVIDSON1 1")
         m = re.match(r"^(.+?)\s*(\d+)\s+(\d+)$", l)
         if cur and m:
             marca = m.group(1).strip()
             data[cur][marca] = data[cur].get(marca, 0) + int(m.group(2))
-    return periodo, data
+    return periodo, data, subtotals
+
+def validate(periodo, data, subtotals):
+    """Devuelve lista de errores. Si NO esta vacia, el PDF parseo mal y NO se
+    debe escribir/commitear (protege contra corrupcion silenciosa si SUCIVE
+    cambia el formato del PDF)."""
+    errs = []
+    if not periodo:
+        errs.append("no se detecto el periodo (formato de fecha cambiado?)")
+    if len(data) < 19:
+        errs.append(f"solo {len(data)} departamentos parseados (esperado 19)")
+    total = sum(sum(m.values()) for m in data.values())
+    if total < 1500:
+        errs.append(f"total pais implausible: {total} (esperado >1500)")
+    for b in ("BACCIO", "YUMBO", "ZANELLA"):
+        if not any(b in m for m in data.values()):
+            errs.append(f"marca conocida ausente en todo el pais: {b}")
+    # CONTROL FUERTE: la suma por depto debe coincidir con el subtotal que el
+    # propio PDF de SUCIVE imprime. Si no coincide, el parseo esta roto.
+    for dep, st in subtotals.items():
+        calc = sum(data.get(dep, {}).values())
+        if calc != st:
+            errs.append(f"subtotal {dep}: PDF dice {st}, parseamos {calc}")
+    if len(subtotals) < 19:
+        errs.append(f"solo {len(subtotals)} subtotales detectados (esperado 19)")
+    return errs
 
 def init_db():
     c = sqlite3.connect(DB)
@@ -70,9 +100,16 @@ def main():
     os.makedirs(PDF_DIR, exist_ok=True); os.makedirs(DATA_DIR, exist_ok=True)
     pdf = os.path.join(PDF_DIR, "catC_marca_depto_latest.pdf")
     download(REPORTS["catC_marca_depto"], pdf)
-    periodo, data = parse_pdf(pdf)
-    if not periodo:
-        print("ERROR: no se pudo detectar el periodo"); sys.exit(1)
+    periodo, data, subtotals = parse_pdf(pdf)
+    # VALIDACION: si el PDF no parsea bien, abortamos SIN escribir nada para no
+    # pisar los datos buenos del mes anterior con basura.
+    errs = validate(periodo, data, subtotals)
+    if errs:
+        print("ABORTADO: el PDF de SUCIVE no paso la validacion:")
+        for e in errs:
+            print("  -", e)
+        print("No se escribio ni commiteo nada. Revisar si SUCIVE cambio el formato.")
+        sys.exit(1)
     # snapshot json del mes
     snap = os.path.join(DATA_DIR, f"{periodo}.json")
     with open(snap, "w", encoding="utf-8") as f:
