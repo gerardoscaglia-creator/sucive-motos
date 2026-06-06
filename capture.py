@@ -47,11 +47,16 @@ def parse_pdf(path):
         periodo = f"{m.group(2)}-{m.group(1)}"
     data = {}; cur = None
     for l in lines:
-        if l in DEPTOS: cur = norm_depto(l); data[cur] = {}; continue
+        # OJO: un departamento puede ocupar varias paginas y el encabezado se
+        # repite. Usamos setdefault (no reset) para NO perder las marcas de la
+        # primera pagina al reaparecer el header.
+        if l in DEPTOS: cur = norm_depto(l); data.setdefault(cur, {}); continue
         if l.lower().startswith("subtotal"): cur = None; continue
-        m = re.match(r"^(.+?)\s+(\d+)\s+(\d+)$", l)
+        # \s* permite nombres largos pegados al numero (ej "HARLEY DAVIDSON1 1")
+        m = re.match(r"^(.+?)\s*(\d+)\s+(\d+)$", l)
         if cur and m:
-            data[cur][m.group(1).strip()] = int(m.group(2))
+            marca = m.group(1).strip()
+            data[cur][marca] = data[cur].get(marca, 0) + int(m.group(2))
     return periodo, data
 
 def init_db():
