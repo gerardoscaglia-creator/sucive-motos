@@ -18,6 +18,11 @@
   h1{font-size:21px}.sub{color:var(--mut);font-size:13px;margin-top:2px}
   .controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
   select{background:var(--card);border:1px solid var(--line);color:var(--txt);padding:9px 12px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer}
+  input{background:#0f1726;border:1px solid var(--line);color:var(--txt);padding:9px 12px;border-radius:10px;font-size:14px;outline:none}
+  input:focus{border-color:var(--azul)}
+  .btn{background:var(--azul);color:#fff;border:0;padding:10px 18px;border-radius:10px;font-weight:700;cursor:pointer;font-size:14px}
+  .field{display:flex;flex-direction:column;gap:4px}.row{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
+  .delx{cursor:pointer;color:#f87171;font-weight:700}
   .periodo{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:13px;color:var(--mut)}
   .periodo b{color:var(--azul)}
   .tabs{display:flex;gap:8px;margin:16px 0;flex-wrap:wrap}
@@ -64,11 +69,13 @@
 </header>
 <div class="tabs">
   <div class="tab active" data-v="depto">🗺️ Departamentos</div>
+  <div class="tab" data-v="empresa">🏢 Mi Empresa</div>
   <div class="tab" data-v="live">⚡ En Vivo</div>
   <div class="tab" data-v="marca">🎯 Análisis de Marca</div>
   <div class="tab" data-v="hist">📈 Histórico</div>
 </div>
 <div id="view-depto"></div>
+<div id="view-empresa" style="display:none"></div>
 <div id="view-live" style="display:none"></div>
 <div id="view-marca" style="display:none"></div>
 <div id="view-hist" style="display:none"></div>
@@ -232,10 +239,63 @@ function renderHist(){
   charts.push(new Chart(hShare,{type:'line',data:{labels:P,datasets:DS.track.map(m=>({label:m,data:P.map(p=>pct(mOf(p,m),tOf(p))),borderColor:COL[m],tension:.3,borderWidth:3,pointRadius:5}))},options:{...ax,scales:{...ax.scales,y:{ticks:{color:'#8a9bb5',callback:v=>v+'%'}}}}}));
 }
 
+/* ===== MI EMPRESA (el cliente carga sus ventas) ===== */
+function loadEmp(){try{return JSON.parse(localStorage.getItem('sucive_miempresa'))||{empresa:'',data:{}};}catch(e){return {empresa:'',data:{}};}}
+function saveEmp(e){localStorage.setItem('sucive_miempresa',JSON.stringify(e));}
+function empName(v){const e=loadEmp();e.empresa=v;saveEmp(e);const s=document.querySelector('.sub');if(s)s.innerHTML='Empadronamientos Cat. C · 19 departamentos'+(v?' · <b style="color:var(--azul)">'+v+'</b>':' · by TrendLab');}
+function empAdd(){const d=document.getElementById('empDepto').value;const u=parseInt(document.getElementById('empUnid').value,10)||0;if(!u)return;const e=loadEmp();e.data[DS.latest]=e.data[DS.latest]||{};e.data[DS.latest][d]=u;saveEmp(e);renderEmpresa();}
+function empDel(d){const e=loadEmp();if(e.data[DS.latest])delete e.data[DS.latest][d];saveEmp(e);renderEmpresa();}
+function renderEmpresa(){
+  const P=L(),per=DS.latest,emp=loadEmp(),mine=emp.data[per]||{};
+  const entries=Object.entries(mine).filter(([d,u])=>u>0).sort((a,b)=>b[1]-a[1]);
+  const totalV=entries.reduce((a,[,u])=>a+u,0);
+  const mercadoOp=entries.reduce((a,[d])=>a+((P.deptos[d]||{total:0}).total),0);
+  const cuotaG=mercadoOp?totalV/mercadoOp*100:0;
+  const rankIn=(d,u)=>Object.values((P.deptos[d]||{marcas:{}}).marcas).filter(v=>v>u).length+1;
+  let best=null;entries.forEach(([d,u])=>{const c=u/((P.deptos[d]||{total:1}).total||1)*100;if(!best||c>best.c)best={d,c};});
+  const cubiertos=new Set(entries.map(([d])=>d));
+  const oportun=Object.entries(P.deptos).filter(([d])=>!cubiertos.has(d)).slice(0,6);
+  const opts=DS.deptos.map(d=>`<option value="${d}">${d}</option>`).join('');
+  const nameVal=(emp.empresa||'').replace(/"/g,'&quot;');
+  document.getElementById('view-empresa').innerHTML=`
+   <div class="card" style="margin-bottom:14px"><h3>Cargá las ventas de tu comercio</h3>
+     <div class="row">
+       <div class="field"><span class="tag">Nombre del comercio</span><input id="empNombre" value="${nameVal}" placeholder="Ej: Motos del Litoral" style="width:220px"></div>
+       <div class="field"><span class="tag">Departamento</span><select id="empDepto">${opts}</select></div>
+       <div class="field"><span class="tag">Motos vendidas (${per})</span><input id="empUnid" type="number" min="1" placeholder="0" style="width:130px"></div>
+       <button class="btn" id="empAddBtn">+ Agregar / Actualizar</button>
+     </div>
+   </div>`+
+   (entries.length?`
+   <div class="grid kpis">
+     <div class="card kpi hl"><div class="big">${fmt(totalV)}</div><div class="lbl">Motos que vendiste · ${per}</div></div>
+     <div class="card kpi"><div class="big">${cuotaG.toFixed(1)}%</div><div class="lbl">Tu cuota en tus zonas (sobre ${fmt(mercadoOp)} del mercado)</div></div>
+     <div class="card kpi"><div class="big">${entries.length}</div><div class="lbl">Departamentos donde operás</div></div>
+     <div class="card kpi"><div class="big" style="color:var(--azul)">${best?best.d:'—'}</div><div class="lbl">Tu mejor plaza${best?' · '+best.c.toFixed(1)+'% cuota':''}</div></div>
+   </div>
+   <div class="grid two" style="margin-top:14px">
+     <div class="card"><h3>Tu desempeño por departamento</h3>
+       <table><thead><tr><th>Depto</th><th class="num">Vendiste</th><th class="num">Mercado</th><th class="num">Tu cuota</th><th class="num">Tu puesto</th><th></th></tr></thead><tbody>`+
+       entries.map(([d,u])=>{const m=(P.deptos[d]||{total:0}).total;const c=m?u/m*100:0;const r=rankIn(d,u);const nm=P.deptos[d]?Object.keys(P.deptos[d].marcas).length:0;return `<tr><td>${d}</td><td class="num" style="color:#fff;font-weight:700">${fmt(u)}</td><td class="num">${fmt(m)}</td><td class="num"><b style="color:${c>=15?'#4ade80':c>=5?'#fbbf24':'#f87171'}">${c.toFixed(1)}%</b></td><td class="num">#${r} / ${nm+1}</td><td><span class="delx" data-del="${d}">✕</span></td></tr>`;}).join('')+
+       `</tbody></table><div class="legend"><span>"Tu puesto" = qué lugar ocuparías en el ranking del depto si tu comercio fuera una marca.</span></div></div>
+     <div class="card"><h3>Tu cuota de mercado por departamento (%)</h3><div class="chartbox"><canvas id="empBar"></canvas></div></div>
+   </div>
+   <div class="card" style="margin-top:14px"><h3>🎯 Mercados sin cubrir — oportunidades por tamaño</h3>`+
+     (oportun.length?`<table><thead><tr><th>Departamento</th><th class="num">Mercado total</th><th>Líder actual</th></tr></thead><tbody>`+
+     oportun.map(([d,o])=>{const t=Object.entries(o.marcas)[0]||['—',0];return `<tr><td>${d}</td><td class="num" style="color:#fff">${fmt(o.total)}</td><td><span style="color:${COL[t[0]]||SEGCOL[segOf(t[0])]};font-weight:600">${t[0]}</span> <span class="tag">${fmt(t[1])}</span></td></tr>`;}).join('')+`</tbody></table>`:'<div class="insight">Cargaste ventas en todos los departamentos.</div>')+`</div>`
+   :`<div class="card" style="text-align:center;padding:44px 20px"><div style="font-size:40px">🏢</div><h3 style="color:var(--txt);font-size:16px;margin-top:6px">Cargá tus ventas para ver tu analítica</h3><p class="insight" style="color:var(--mut);max-width:540px;margin:10px auto">Agregá cuántas motos vendió tu comercio y en qué departamento. Te calculo tu <b>cuota de mercado real</b> contra los empadronamientos de SUCIVE, qué puesto ocuparías entre las marcas, y dónde tenés oportunidad de crecer.</p></div>`)
+   +`<div class="note">🔒 Tus datos quedan guardados solo en este navegador (privados, no se suben). Se comparan contra el mercado real de SUCIVE del período ${per}.</div>`;
+  document.getElementById('empNombre').addEventListener('change',e=>empName(e.target.value));
+  document.getElementById('empAddBtn').addEventListener('click',empAdd);
+  document.querySelectorAll('#view-empresa [data-del]').forEach(x=>x.addEventListener('click',()=>empDel(x.dataset.del)));
+  destroyCharts();
+  if(entries.length){charts.push(new Chart(empBar,{type:'bar',data:{labels:entries.map(([d])=>d),datasets:[{data:entries.map(([d,u])=>{const m=(P.deptos[d]||{total:1}).total;return m?u/m*100:0;}),backgroundColor:'#2f86ff',borderRadius:4}]},options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#8a9bb5',callback:v=>v+'%'},grid:{color:'#22304a'}},y:{ticks:{color:'#8a9bb5'},grid:{display:false}}}}}));}
+}
+
 function switchView(v){
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.v===v));
-  ['depto','live','marca','hist'].forEach(x=>document.getElementById('view-'+x).style.display=x===v?'':'none');
-  ({depto:renderDepto,live:renderLive,marca:renderMarca,hist:renderHist})[v]();
+  ['depto','empresa','live','marca','hist'].forEach(x=>document.getElementById('view-'+x).style.display=x===v?'':'none');
+  ({depto:renderDepto,empresa:renderEmpresa,live:renderLive,marca:renderMarca,hist:renderHist})[v]();
 }
 async function load(){
   const r=await fetch('dataset.json?t='+Date.now());DS=await r.json();
@@ -249,6 +309,7 @@ async function load(){
   document.getElementById('marcaSel').value=marca;
   document.getElementById('latestLbl').textContent=DS.latest;
   document.getElementById('foot').textContent='Fuente: SUCIVE (sucive.gub.uy) · Períodos: '+DS.periods.join(' · ')+' · Actualización automática mensual';
+  const _e=loadEmp();if(_e.empresa)document.querySelector('.sub').innerHTML='Empadronamientos Cat. C · 19 departamentos · <b style="color:var(--azul)">'+_e.empresa+'</b>';
   switchView(document.querySelector('.tab.active').dataset.v);
 }
 document.getElementById('deptoSel').onchange=e=>{focus=e.target.value;const a=document.querySelector('.tab.active').dataset.v;switchView(a==='depto'||a==='marca'?'live':a);};
