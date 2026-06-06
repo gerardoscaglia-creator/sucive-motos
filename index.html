@@ -243,53 +243,81 @@ function renderHist(){
 function loadEmp(){try{return JSON.parse(localStorage.getItem('sucive_miempresa'))||{empresa:'',data:{}};}catch(e){return {empresa:'',data:{}};}}
 function saveEmp(e){localStorage.setItem('sucive_miempresa',JSON.stringify(e));}
 function empName(v){const e=loadEmp();e.empresa=v;saveEmp(e);const s=document.querySelector('.sub');if(s)s.innerHTML='Empadronamientos Cat. C · 19 departamentos'+(v?' · <b style="color:var(--azul)">'+v+'</b>':' · by TrendLab');}
-function empAdd(){const d=document.getElementById('empDepto').value;const u=parseInt(document.getElementById('empUnid').value,10)||0;if(!u)return;const e=loadEmp();e.data[DS.latest]=e.data[DS.latest]||{};e.data[DS.latest][d]=u;saveEmp(e);renderEmpresa();}
-function empDel(d){const e=loadEmp();if(e.data[DS.latest])delete e.data[DS.latest][d];saveEmp(e);renderEmpresa();}
+function empZona(v){const e=loadEmp();e.depto=v;saveEmp(e);renderEmpresa();}
+function empAdd(){const m=document.getElementById('empMarca').value;const u=parseInt(document.getElementById('empUnid').value,10)||0;if(!u)return;const e=loadEmp();e.data[DS.latest]=e.data[DS.latest]||{};e.data[DS.latest][m]=u;saveEmp(e);renderEmpresa();}
+function empDel(m){const e=loadEmp();if(e.data[DS.latest])delete e.data[DS.latest][m];saveEmp(e);renderEmpresa();}
+function empTrend(zona,m){if(!DS.prev)return null;const cur=((L().deptos[zona]||{marcas:{}}).marcas)[m]||0;const pv=((DS.by_period[DS.prev].deptos[zona]||{marcas:{}}).marcas)[m]||0;if(!pv)return null;return {cur,pv,pct:(cur-pv)/pv*100};}
+function empRecs(zona,entries,dObj){
+  const sold=Object.fromEntries(entries),totalV=entries.reduce((a,[,u])=>a+u,0);
+  const mkt=Object.entries(dObj.marcas).sort((a,b)=>b[1]-a[1]);const recs=[];
+  if(DS.prev){mkt.forEach(([m,v])=>{const t=empTrend(zona,m);if(t&&t.pct>=20&&v>=3)recs.push({p:1,i:'🔥',t:`<b>${m}</b> creció <b>${t.pct.toFixed(0)}%</b> en ${zona} vs ${DS.prev}. Modelo en tendencia — anticipate con stock.`});});}
+  if(mkt[0]){const[m,v]=mkt[0];const u=sold[m]||0;const c=v?u/v*100:0;if(c<30)recs.push({p:2,i:'🎯',t:`<b>${m}</b> es el modelo más empadronado de ${zona} (${fmt(v)}) y ${u?'solo capturás <b>'+c.toFixed(0)+'%</b>':'<b>no lo vendés</b>'}. La mayor oportunidad de tu zona.`});}
+  mkt.filter(([m])=>!sold[m]).slice(0,2).forEach(([m,v])=>{if(v>=3)recs.push({p:3,i:'🆕',t:`Sumá <b>${m}</b> a tu mix: ${fmt(v)} empadronadas/mes en ${zona} y no la ofrecés.`});});
+  entries.forEach(([m,u])=>{const v=dObj.marcas[m]||0;const c=v?u/v*100:0;if(v>=5&&c<25)recs.push({p:4,i:'📈',t:`De <b>${m}</b> se empadronan ${fmt(v)} en ${zona} y capturás ${c.toFixed(0)}%. Empujá ese modelo.`});});
+  if(entries[0]&&totalV){const sh=entries[0][1]/totalV*100;if(sh>55)recs.push({p:5,i:'⚠️',t:`El <b>${sh.toFixed(0)}%</b> de tus ventas es ${entries[0][0]}. Dependés mucho de un modelo — conviene diversificar.`});}
+  const segShare=s=>{let mine=0,mk=0;entries.forEach(([m,u])=>{if(segOf(m)===s)mine+=u;});Object.entries(dObj.marcas).forEach(([m,v])=>{if(segOf(m)===s)mk+=v;});return {mine:totalV?mine/totalV*100:0,mk:dObj.total?mk/dObj.total*100:0};};
+  const ec=segShare('economica');if(ec.mk-ec.mine>15)recs.push({p:5,i:'💰',t:`Tu zona compra económico (${ec.mk.toFixed(0)}% del mercado) y tu mix económico es ${ec.mine.toFixed(0)}%. Reforzá modelos de entrada.`});
+  const pr=segShare('premium');if(pr.mine-pr.mk>15)recs.push({p:5,i:'💸',t:`Tu mix es más premium (${pr.mine.toFixed(0)}%) que tu zona (${pr.mk.toFixed(0)}%). Ojo: la zona compra más barato.`});
+  entries.forEach(([m,u])=>{const v=dObj.marcas[m]||0;const c=v?u/v*100:0;if(c>=50)recs.push({p:7,i:'✅',t:`Dominás <b>${m}</b> (${c.toFixed(0)}% de la zona). Defendé esa posición.`});});
+  return recs.sort((a,b)=>a.p-b.p).slice(0,6);
+}
 function renderEmpresa(){
   const P=L(),per=DS.latest,emp=loadEmp(),mine=emp.data[per]||{};
-  const entries=Object.entries(mine).filter(([d,u])=>u>0).sort((a,b)=>b[1]-a[1]);
+  const zona=(emp.depto&&P.deptos[emp.depto])?emp.depto:(P.deptos[DS.default_focus]?DS.default_focus:DS.deptos[0]);
+  const dObj=P.deptos[zona]||{total:0,marcas:{}};
+  const entries=Object.entries(mine).filter(([m,u])=>u>0).sort((a,b)=>b[1]-a[1]);
   const totalV=entries.reduce((a,[,u])=>a+u,0);
-  const mercadoOp=entries.reduce((a,[d])=>a+((P.deptos[d]||{total:0}).total),0);
-  const cuotaG=mercadoOp?totalV/mercadoOp*100:0;
-  const rankIn=(d,u)=>Object.values((P.deptos[d]||{marcas:{}}).marcas).filter(v=>v>u).length+1;
-  let best=null;entries.forEach(([d,u])=>{const c=u/((P.deptos[d]||{total:1}).total||1)*100;if(!best||c>best.c)best={d,c};});
-  const cubiertos=new Set(entries.map(([d])=>d));
-  const oportun=Object.entries(P.deptos).filter(([d])=>!cubiertos.has(d)).slice(0,6);
-  const opts=DS.deptos.map(d=>`<option value="${d}">${d}</option>`).join('');
+  const cuotaT=dObj.total?totalV/dObj.total*100:0;
+  const rankImp=Object.values(dObj.marcas).filter(v=>v>totalV).length+1;
+  const nMarcas=Object.keys(dObj.marcas).length;
+  const estrella=entries[0]?entries[0][0]:'—';
+  const mktOf=m=>dObj.marcas[m]||0;
+  const vende=new Set(entries.map(([m])=>m));
+  const oportun=Object.entries(dObj.marcas).filter(([m])=>!vende.has(m)).slice(0,8);
+  const noCap=Math.max(0,dObj.total-totalV);const recs=empRecs(zona,entries,dObj);
+  const zonaOpts=DS.deptos.map(d=>`<option value="${d}"${d===zona?' selected':''}>${d}</option>`).join('');
+  const marcaOpts=Object.keys(P.nac_marcas).map(m=>`<option value="${m}">${m}</option>`).join('');
   const nameVal=(emp.empresa||'').replace(/"/g,'&quot;');
   document.getElementById('view-empresa').innerHTML=`
-   <div class="card" style="margin-bottom:14px"><h3>Cargá las ventas de tu comercio</h3>
+   <div class="card" style="margin-bottom:14px"><h3>Cargá tu comercio y tus ventas por modelo</h3>
      <div class="row">
-       <div class="field"><span class="tag">Nombre del comercio</span><input id="empNombre" value="${nameVal}" placeholder="Ej: Motos del Litoral" style="width:220px"></div>
-       <div class="field"><span class="tag">Departamento</span><select id="empDepto">${opts}</select></div>
-       <div class="field"><span class="tag">Motos vendidas (${per})</span><input id="empUnid" type="number" min="1" placeholder="0" style="width:130px"></div>
-       <button class="btn" id="empAddBtn">+ Agregar / Actualizar</button>
+       <div class="field"><span class="tag">Nombre del comercio</span><input id="empNombre" value="${nameVal}" placeholder="Ej: Motos del Litoral" style="width:200px"></div>
+       <div class="field"><span class="tag">Tu departamento (zona)</span><select id="empZona">${zonaOpts}</select></div>
+       <div class="field"><span class="tag">Modelo / marca</span><select id="empMarca">${marcaOpts}</select></div>
+       <div class="field"><span class="tag">Unidades (${per})</span><input id="empUnid" type="number" min="1" placeholder="0" style="width:110px"></div>
+       <button class="btn" id="empAddBtn">+ Agregar modelo</button>
      </div>
    </div>`+
    (entries.length?`
    <div class="grid kpis">
-     <div class="card kpi hl"><div class="big">${fmt(totalV)}</div><div class="lbl">Motos que vendiste · ${per}</div></div>
-     <div class="card kpi"><div class="big">${cuotaG.toFixed(1)}%</div><div class="lbl">Tu cuota en tus zonas (sobre ${fmt(mercadoOp)} del mercado)</div></div>
-     <div class="card kpi"><div class="big">${entries.length}</div><div class="lbl">Departamentos donde operás</div></div>
-     <div class="card kpi"><div class="big" style="color:var(--azul)">${best?best.d:'—'}</div><div class="lbl">Tu mejor plaza${best?' · '+best.c.toFixed(1)+'% cuota':''}</div></div>
+     <div class="card kpi hl"><div class="big">${fmt(totalV)}</div><div class="lbl">Vendidas en ${zona} · ${per}</div></div>
+     <div class="card kpi"><div class="big">${cuotaT.toFixed(1)}%</div><div class="lbl">Tu cuota del mercado de ${zona} (${fmt(dObj.total)} motos)</div></div>
+     <div class="card kpi"><div class="big" style="color:#fbbf24">${fmt(noCap)}</div><div class="lbl">Demanda no capturada (se la llevó la competencia)</div></div>
+     <div class="card kpi"><div class="big">#${rankImp} / ${nMarcas+1}</div><div class="lbl">Tu puesto si fueras una marca en ${zona}</div></div>
+     <div class="card kpi"><div class="big" style="color:var(--azul)">${estrella}</div><div class="lbl">Tu modelo estrella</div></div>
    </div>
+   ${recs.length?`<div class="card" style="margin-top:14px"><h3>📋 Recomendaciones para tu negocio</h3>`+recs.map(r=>`<div style="display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--line)"><span style="font-size:18px;flex-shrink:0">${r.i}</span><span class="insight">${r.t}</span></div>`).join('')+`</div>`:''}
+   ${DS.periods.length<2?`<div class="note" style="border-left-color:#fbbf24">📊 <b>Tendencia de modelos</b> (cuáles suben o bajan) se activa con el 2º mes de datos — aparece automáticamente el mes que viene.</div>`:''}
    <div class="grid two" style="margin-top:14px">
-     <div class="card"><h3>Tu desempeño por departamento</h3>
-       <table><thead><tr><th>Depto</th><th class="num">Vendiste</th><th class="num">Mercado</th><th class="num">Tu cuota</th><th class="num">Tu puesto</th><th></th></tr></thead><tbody>`+
-       entries.map(([d,u])=>{const m=(P.deptos[d]||{total:0}).total;const c=m?u/m*100:0;const r=rankIn(d,u);const nm=P.deptos[d]?Object.keys(P.deptos[d].marcas).length:0;return `<tr><td>${d}</td><td class="num" style="color:#fff;font-weight:700">${fmt(u)}</td><td class="num">${fmt(m)}</td><td class="num"><b style="color:${c>=15?'#4ade80':c>=5?'#fbbf24':'#f87171'}">${c.toFixed(1)}%</b></td><td class="num">#${r} / ${nm+1}</td><td><span class="delx" data-del="${d}">✕</span></td></tr>`;}).join('')+
-       `</tbody></table><div class="legend"><span>"Tu puesto" = qué lugar ocuparías en el ranking del depto si tu comercio fuera una marca.</span></div></div>
-     <div class="card"><h3>Tu cuota de mercado por departamento (%)</h3><div class="chartbox"><canvas id="empBar"></canvas></div></div>
+     <div class="card"><h3>Tus modelos vs el mercado de ${zona}</h3>
+       <table><thead><tr><th>Modelo</th><th class="num">Vendiste</th><th class="num">Mercado ${zona}</th><th class="num">No capturado</th><th class="num">Tu cuota</th><th>Lectura</th><th></th></tr></thead><tbody>`+
+       entries.map(([m,u])=>{const mk=mktOf(m);const c=mk?u/mk*100:(u>0?100:0);const lec=mk===0?'<span class="ifl-hi">Solo vos</span>':c>=50?'<span class="ifl-hi">Dominás</span>':c>=20?'<span style="color:#fbbf24;font-weight:700">Fuerte</span>':'<span class="ifl-lo">Bajo</span>';return `<tr><td>${segBadge(segOf(m))} ${m}</td><td class="num" style="color:#fff;font-weight:700">${fmt(u)}</td><td class="num">${fmt(mk)}</td><td class="num" style="color:#fbbf24">${fmt(Math.max(0,mk-u))}</td><td class="num"><b>${c.toFixed(0)}%</b></td><td>${lec}</td><td><span class="delx" data-del="${m}">✕</span></td></tr>`;}).join('')+
+       `</tbody></table><div class="legend"><span>"Tu cuota" = de todos los [modelo] empadronados en ${zona}, cuántos los vendiste vos.</span></div></div>
+     <div class="card"><h3>Tus ventas vs mercado por modelo · ${zona}</h3><div class="chartbox"><canvas id="empBar"></canvas></div></div>
    </div>
-   <div class="card" style="margin-top:14px"><h3>🎯 Mercados sin cubrir — oportunidades por tamaño</h3>`+
-     (oportun.length?`<table><thead><tr><th>Departamento</th><th class="num">Mercado total</th><th>Líder actual</th></tr></thead><tbody>`+
-     oportun.map(([d,o])=>{const t=Object.entries(o.marcas)[0]||['—',0];return `<tr><td>${d}</td><td class="num" style="color:#fff">${fmt(o.total)}</td><td><span style="color:${COL[t[0]]||SEGCOL[segOf(t[0])]};font-weight:600">${t[0]}</span> <span class="tag">${fmt(t[1])}</span></td></tr>`;}).join('')+`</tbody></table>`:'<div class="insight">Cargaste ventas en todos los departamentos.</div>')+`</div>`
-   :`<div class="card" style="text-align:center;padding:44px 20px"><div style="font-size:40px">🏢</div><h3 style="color:var(--txt);font-size:16px;margin-top:6px">Cargá tus ventas para ver tu analítica</h3><p class="insight" style="color:var(--mut);max-width:540px;margin:10px auto">Agregá cuántas motos vendió tu comercio y en qué departamento. Te calculo tu <b>cuota de mercado real</b> contra los empadronamientos de SUCIVE, qué puesto ocuparías entre las marcas, y dónde tenés oportunidad de crecer.</p></div>`)
-   +`<div class="note">🔒 Tus datos quedan guardados solo en este navegador (privados, no se suben). Se comparan contra el mercado real de SUCIVE del período ${per}.</div>`;
+   <div class="card" style="margin-top:14px"><h3>🎯 Modelos con demanda en ${zona} que NO estás vendiendo</h3>`+
+     (oportun.length?`<table><thead><tr><th>Modelo</th><th>Segmento</th><th class="num">Empadronados en ${zona}</th></tr></thead><tbody>`+
+     oportun.map(([m,v])=>`<tr><td style="font-weight:600">${m}</td><td>${segBadge(segOf(m))}</td><td class="num" style="color:#fff">${fmt(v)}</td></tr>`).join('')+`</tbody></table><div class="legend"><span>Modelos que se empadronan en tu zona y no tenés en tu mix = oportunidad de stock.</span></div>`:'<div class="insight">Estás cubriendo todos los modelos que se venden en tu zona.</div>')+`</div>`
+   :`<div class="card" style="text-align:center;padding:44px 20px"><div style="font-size:40px">🏢</div><h3 style="color:var(--txt);font-size:16px;margin-top:6px">Cargá tus ventas por modelo</h3><p class="insight" style="color:var(--mut);max-width:560px;margin:10px auto">Elegí tu departamento y agregá cuántas unidades de cada modelo vendiste. Te calculo tu <b>cuota de mercado por modelo</b> contra los empadronamientos reales de SUCIVE en tu zona, y qué modelos con demanda no estás aprovechando.</p></div>`)
+   +`<div class="note">🔒 Tus datos quedan solo en este navegador (privados). Se comparan contra el mercado real de SUCIVE de ${zona} · ${per}.</div>`;
   document.getElementById('empNombre').addEventListener('change',e=>empName(e.target.value));
+  document.getElementById('empZona').addEventListener('change',e=>empZona(e.target.value));
   document.getElementById('empAddBtn').addEventListener('click',empAdd);
   document.querySelectorAll('#view-empresa [data-del]').forEach(x=>x.addEventListener('click',()=>empDel(x.dataset.del)));
   destroyCharts();
-  if(entries.length){charts.push(new Chart(empBar,{type:'bar',data:{labels:entries.map(([d])=>d),datasets:[{data:entries.map(([d,u])=>{const m=(P.deptos[d]||{total:1}).total;return m?u/m*100:0;}),backgroundColor:'#2f86ff',borderRadius:4}]},options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#8a9bb5',callback:v=>v+'%'},grid:{color:'#22304a'}},y:{ticks:{color:'#8a9bb5'},grid:{display:false}}}}}));}
+  if(entries.length){
+    charts.push(new Chart(empBar,{type:'bar',data:{labels:entries.map(([m])=>m),datasets:[{label:'Vendiste',data:entries.map(([,u])=>u),backgroundColor:'#2f86ff',borderRadius:4},{label:'Mercado '+zona,data:entries.map(([m])=>mktOf(m)),backgroundColor:'#334866',borderRadius:4}]},options:{indexAxis:'y',plugins:{legend:{labels:{color:'#8a9bb5'}}},scales:{x:{ticks:{color:'#8a9bb5'},grid:{color:'#22304a'}},y:{ticks:{color:'#8a9bb5'},grid:{display:false}}}}}));
+  }
 }
 
 function switchView(v){
