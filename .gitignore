@@ -1,0 +1,9 @@
+_c.js
+_check.js
+.playwright-mcp/
+*.tmp
+__pycache__/
+parse_mercosur.py
+catC_marca_depto_latest copy*.pdf
+
+sucive.db

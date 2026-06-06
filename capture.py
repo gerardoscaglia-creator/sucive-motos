@@ -1,0 +1,90 @@
+# -*- coding: utf-8 -*-
+"""
+SUCIVE Motos - Captura y parseo mensual de empadronamientos Cat. C (motos).
+Descarga los PDF estables de SUCIVE, parsea marca x departamento, y acumula
+en SQLite + snapshot JSON por mes. Pensado para correr 1 vez por mes (Task Scheduler).
+
+Uso:  python capture.py
+"""
+import os, re, sqlite3, json, urllib.request, ssl, sys
+
+BASE = os.path.dirname(os.path.abspath(__file__))
+PDF_DIR = os.path.join(BASE, "pdfs")
+DATA_DIR = os.path.join(BASE, "data")
+DB = os.path.join(BASE, "sucive.db")
+
+# Reportes SUCIVE (URLs estables, no de sesion)
+REPORTS = {
+    "catC_marca_depto": "https://sucive.gub.uy/?-1.-empCatCPorMarcaYDepto",  # motos por marca y depto
+}
+
+DEPTOS = {"Artigas","Canelones","Cerro Largo","Colonia","Durazno","Flores","Florida",
+    "Lavalleja","Maldonado","Montevideo","Paysandu","Paysandú","Rio Negro","Río Negro",
+    "Rivera","Rocha","Salto","San Jose","San José","Soriano","Tacuarembo","Tacuarembó",
+    "Treinta y Tres"}
+
+def norm_depto(d):
+    return (d.replace("Paysandu","Paysandú").replace("Rio Negro","Río Negro")
+             .replace("San Jose","San José").replace("Tacuarembo","Tacuarembó"))
+
+def download(url, dest):
+    ctx = ssl.create_default_context(); ctx.check_hostname=False; ctx.verify_mode=ssl.CERT_NONE
+    req = urllib.request.Request(url, headers={"User-Agent":"Mozilla/5.0"})
+    with urllib.request.urlopen(req, context=ctx, timeout=60) as r, open(dest,"wb") as f:
+        f.write(r.read())
+
+def parse_pdf(path):
+    import pypdf
+    r = pypdf.PdfReader(path)
+    full = "\n".join(p.extract_text() for p in r.pages)
+    lines = [l.strip() for l in full.split("\n") if l.strip()]
+    # periodo: "01/05/2026" ... "31/05/2026" -> usamos mes/anio del inicio
+    # El periodo SIEMPRE arranca el dia 01 (ej "01/05/2026"); la "Fecha de
+    # actualizacion" no, asi evitamos confundirla con el periodo real.
+    periodo = None
+    m = re.search(r"\b01/(\d{2})/(\d{4})", full)
+    if m:
+        periodo = f"{m.group(2)}-{m.group(1)}"
+    data = {}; cur = None
+    for l in lines:
+        if l in DEPTOS: cur = norm_depto(l); data[cur] = {}; continue
+        if l.lower().startswith("subtotal"): cur = None; continue
+        m = re.match(r"^(.+?)\s+(\d+)\s+(\d+)$", l)
+        if cur and m:
+            data[cur][m.group(1).strip()] = int(m.group(2))
+    return periodo, data
+
+def init_db():
+    c = sqlite3.connect(DB)
+    c.execute("""CREATE TABLE IF NOT EXISTS emp(
+        periodo TEXT, depto TEXT, marca TEXT, cantidad INTEGER,
+        PRIMARY KEY(periodo,depto,marca))""")
+    c.commit(); return c
+
+def main():
+    os.makedirs(PDF_DIR, exist_ok=True); os.makedirs(DATA_DIR, exist_ok=True)
+    pdf = os.path.join(PDF_DIR, "catC_marca_depto_latest.pdf")
+    download(REPORTS["catC_marca_depto"], pdf)
+    periodo, data = parse_pdf(pdf)
+    if not periodo:
+        print("ERROR: no se pudo detectar el periodo"); sys.exit(1)
+    # snapshot json del mes
+    snap = os.path.join(DATA_DIR, f"{periodo}.json")
+    with open(snap, "w", encoding="utf-8") as f:
+        json.dump({"periodo": periodo, "data": data}, f, ensure_ascii=False, indent=2)
+    # archivar el pdf del mes
+    import shutil; shutil.copy(pdf, os.path.join(PDF_DIR, f"catC_{periodo}.pdf"))
+    # upsert en db
+    c = init_db()
+    n = 0
+    for depto, marcas in data.items():
+        for marca, cant in marcas.items():
+            c.execute("INSERT OR REPLACE INTO emp VALUES(?,?,?,?)",(periodo,depto,marca,cant)); n+=1
+    c.commit()
+    total = sum(sum(m.values()) for m in data.values())
+    sor = sum(data.get("Soriano",{}).values())
+    print(f"OK periodo={periodo} deptos={len(data)} filas={n} total_pais={total} soriano={sor}")
+    c.close()
+
+if __name__ == "__main__":
+    main()

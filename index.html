@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SUCIVE Motos · Inteligencia de Mercado</title>
+<script src="chart.umd.min.js"></script>
+<style>
+  :root{--bg:#0b1220;--card:#131c2e;--line:#22304a;--txt:#e8eef7;--mut:#8a9bb5;
+    --azul:#2f86ff;--azul2:#1456c4;--ok:#22c55e;--bad:#ef4444;--warn:#fbbf24;
+    --eco:#22c55e;--media:#2f86ff;--premium:#a855f7;--elec:#06b6d4;--otras:#64748b;
+    --yumbo:#ff7a18;--baccio:#2f86ff;--zanella:#22c55e;}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--txt);font-family:'Segoe UI',system-ui,sans-serif;padding:22px;max-width:1340px;margin:0 auto}
+  header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:6px}
+  .brand{display:flex;align-items:center;gap:12px}
+  .logo{width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,var(--azul),var(--azul2));display:grid;place-items:center;font-weight:800;font-size:20px}
+  h1{font-size:21px}.sub{color:var(--mut);font-size:13px;margin-top:2px}
+  .controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  select{background:var(--card);border:1px solid var(--line);color:var(--txt);padding:9px 12px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer}
+  .periodo{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:13px;color:var(--mut)}
+  .periodo b{color:var(--azul)}
+  .tabs{display:flex;gap:8px;margin:16px 0;flex-wrap:wrap}
+  .tab{background:var(--card);border:1px solid var(--line);color:var(--mut);padding:10px 16px;border-radius:10px;cursor:pointer;font-size:14px;font-weight:600}
+  .tab.active{background:var(--azul);color:#fff;border-color:var(--azul)}
+  .grid{display:grid;gap:14px}.kpis{grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
+  .two{grid-template-columns:1fr 1fr}.three{grid-template-columns:1fr 1fr 1fr}
+  @media(max-width:900px){.two,.three{grid-template-columns:1fr}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
+  .card h3{font-size:12px;color:var(--mut);font-weight:600;margin-bottom:12px;text-transform:uppercase;letter-spacing:.4px}
+  .kpi .big{font-size:30px;font-weight:800;line-height:1}.kpi .lbl{color:var(--mut);font-size:12px;margin-top:6px}
+  .kpi .chg{font-size:12px;margin-top:6px;font-weight:600}.up{color:var(--ok)}.down{color:var(--bad)}
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  th,td{text-align:left;padding:7px 6px;border-bottom:1px solid var(--line)}
+  th{color:var(--mut);font-weight:600;font-size:11px;text-transform:uppercase;cursor:pointer}
+  td.num{text-align:right;font-variant-numeric:tabular-nums}
+  tr.click{cursor:pointer}tr.click:hover td{background:#1a2740}tr.focus td{background:#16335e}
+  .bar{height:8px;border-radius:4px;background:var(--azul);min-width:2px}
+  .pill{display:inline-block;padding:1px 7px;border-radius:20px;font-size:10px;font-weight:700}
+  .gold{background:#f59e0b22;color:#fbbf24}.slv{background:#94a3b822;color:#cbd5e1}.brz{background:#b4530922;color:#f0975a}
+  .seg-eco{background:#22c55e22;color:#4ade80}.seg-media{background:#2f86ff22;color:#60a5fa}
+  .seg-premium{background:#a855f722;color:#c084fc}.seg-electrica{background:#06b6d422;color:#22d3ee}.seg-otras{background:#64748b22;color:#94a3b8}
+  .ifl-hi{color:#4ade80;font-weight:700}.ifl-lo{color:#f87171;font-weight:700}.ifl-mid{color:var(--mut)}
+  .note{background:#1a2030;border:1px solid var(--line);border-left:3px solid var(--azul);border-radius:8px;padding:11px 13px;color:var(--mut);font-size:12.5px;margin-top:14px;line-height:1.5}
+  .chartbox{position:relative;height:300px}
+  .hl{background:linear-gradient(90deg,#2f86ff22,transparent);border:1px solid var(--azul)}
+  .foot{color:var(--mut);font-size:12px;margin-top:22px;text-align:center}
+  .tag{font-size:11px;color:var(--mut)}.insight{font-size:13px;line-height:1.6;color:var(--txt)}
+  .insight b{color:var(--azul)} canvas{max-width:100%}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--mut);margin-top:8px}
+  .dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:middle}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand"><div class="logo">TL</div>
+    <div><h1>SUCIVE Motos · Inteligencia de Mercado</h1>
+      <div class="sub">Empadronamientos Cat. C · 19 departamentos · by TrendLab</div></div></div>
+  <div class="controls">
+    <span class="tag">Depto:</span><select id="deptoSel"></select>
+    <span class="tag">Marca:</span><select id="marcaSel"></select>
+    <div class="periodo">Período: <b id="latestLbl">—</b></div>
+  </div>
+</header>
+<div class="tabs">
+  <div class="tab active" data-v="depto">🗺️ Departamentos</div>
+  <div class="tab" data-v="live">⚡ En Vivo</div>
+  <div class="tab" data-v="marca">🎯 Análisis de Marca</div>
+  <div class="tab" data-v="hist">📈 Histórico</div>
+</div>
+<div id="view-depto"></div>
+<div id="view-live" style="display:none"></div>
+<div id="view-marca" style="display:none"></div>
+<div id="view-hist" style="display:none"></div>
+<div class="foot" id="foot">cargando…</div>
+<script>
+const COL={YUMBO:'#ff7a18',BACCIO:'#2f86ff',ZANELLA:'#22c55e',RESTO:'#64748b'};
+const SEGCOL={economica:'#22c55e',media:'#2f86ff',premium:'#a855f7',electrica:'#06b6d4',otras:'#64748b'};
+const SEGLBL={economica:'Económica',media:'Media',premium:'Premium',electrica:'Eléctrica',otras:'Otras'};
+const PAIS='__PAIS__';
+const fmt=n=>Math.round(n).toLocaleString('es-UY');
+const pct=(a,b)=>b?(a/b*100):0;
+let DS=null,charts=[],focus='Soriano',marca='YUMBO',deptoSort='total';
+function medal(i){return i==0?'<span class="pill gold">🥇</span>':i==1?'<span class="pill slv">🥈</span>':i==2?'<span class="pill brz">🥉</span>':'';}
+function segBadge(s){return `<span class="pill seg-${s}">${SEGLBL[s]||s}</span>`;}
+function destroyCharts(){charts.forEach(c=>c.destroy());charts=[];}
+function L(){return DS.by_period[DS.latest];}
+function scope(f){const P=L();return f===PAIS?{total:P.total_pais,marcas:P.nac_marcas}:{total:(P.deptos[f]||{total:0}).total,marcas:(P.deptos[f]||{marcas:{}}).marcas||{}};}
+function fname(f){return f===PAIS?'País':f;}
+function segOf(mk){const bs=L().brand_stats[mk];return bs?bs.seg:'otras';}
+function iflVal(mk,depto){const sc=scope(depto);const local=pct(sc.marcas[mk]||0,sc.total);const nac=L().brand_stats[mk]?L().brand_stats[mk].share:0;return nac?local/nac:0;}
+function iflCell(v){if(!v)return '<span class="ifl-mid">—</span>';const c=v>=1.3?'ifl-hi':v<=0.7?'ifl-lo':'ifl-mid';return `<span class="${c}">${v.toFixed(2)}×</span>`;}
+
+function rankTable(marcas,total,withSeg){
+  const ents=Object.entries(marcas);const max=ents[0]?ents[0][1]:1;
+  return `<table><thead><tr><th>Marca</th>${withSeg?'<th>Segm.</th>':''}<th class="num">Unid.</th><th class="num">Share</th><th></th></tr></thead><tbody>`+
+   ents.slice(0,14).map(([m,v],i)=>`<tr><td>${medal(i)} ${m}</td>${withSeg?`<td>${segBadge(segOf(m))}</td>`:''}<td class="num">${fmt(v)}</td><td class="num">${pct(v,total).toFixed(1)}%</td><td style="width:24%"><div class="bar" style="width:${v/max*100}%;background:${COL[m]||SEGCOL[segOf(m)]}"></div></td></tr>`).join('')+`</tbody></table>`;
+}
+function segSplit(marcas){const t={economica:0,media:0,premium:0,electrica:0,otras:0};for(const[k,v]of Object.entries(marcas))t[segOf(k)]+=v;return t;}
+function doughSeg(id,sp){charts.push(new Chart(document.getElementById(id),{type:'doughnut',data:{labels:Object.keys(sp).map(k=>SEGLBL[k]),datasets:[{data:Object.values(sp),backgroundColor:Object.keys(sp).map(k=>SEGCOL[k]),borderWidth:0}]},options:{plugins:{legend:{position:'bottom',labels:{color:'#8a9bb5',boxWidth:9,font:{size:10}}}},cutout:'58%'}}));}
+
+/* ===== DEPARTAMENTOS ===== */
+function renderDepto(){
+  const P=L();const deptos=Object.entries(P.deptos);
+  let arr=deptos.map(([d,o])=>{const t=Object.entries(o.marcas)[0]||['—',0];return{d,total:o.total,top:t[0],topv:t[1]};});
+  if(deptoSort==='nombre')arr.sort((a,b)=>a.d.localeCompare(b.d));else arr.sort((a,b)=>b.total-a.total);
+  const max=Math.max(...arr.map(a=>a.total));
+  document.getElementById('view-depto').innerHTML=`
+   <div class="grid kpis">
+     <div class="card kpi"><div class="big">${fmt(P.total_pais)}</div><div class="lbl">Total motos país · ${DS.latest}</div></div>
+     <div class="card kpi"><div class="big" style="color:var(--azul)">${arr[0].d}</div><div class="lbl">Mayor mercado · ${fmt(arr[0].total)} u</div></div>
+     <div class="card kpi"><div class="big">${P.n_marcas}</div><div class="lbl">Marcas activas en el país</div></div>
+     <div class="card kpi"><div class="big">${P.top3_share}%</div><div class="lbl">Top-3 marcas · concentración</div></div>
+   </div>
+   <div class="card" style="margin-top:14px"><h3>Total de motos por departamento — clic para ver su detalle</h3>
+     <table><thead><tr><th data-s="nombre">Departamento</th><th class="num" data-s="total">Motos</th><th class="num">Share país</th><th>Marca líder</th><th></th></tr></thead><tbody>`+
+     arr.map(a=>`<tr class="click ${a.d===focus?'focus':''}" data-d="${a.d}"><td>${a.d}</td><td class="num" style="color:#fff;font-weight:700">${fmt(a.total)}</td><td class="num">${pct(a.total,P.total_pais).toFixed(1)}%</td><td><span style="color:${COL[a.top]||SEGCOL[segOf(a.top)]};font-weight:600">${a.top}</span> <span class="tag">${fmt(a.topv)}</span></td><td style="width:22%"><div class="bar" style="width:${a.total/max*100}%"></div></td></tr>`).join('')+
+     `</tbody></table></div>
+   <div class="card" style="margin-top:14px"><h3>Ranking de mercados · ${DS.latest}</h3><div class="chartbox" style="height:340px"><canvas id="dBar"></canvas></div></div>
+   <div class="note">${DS.nota}</div>`;
+  document.querySelectorAll('#view-depto tr.click').forEach(tr=>tr.onclick=()=>{focus=tr.dataset.d;document.getElementById('deptoSel').value=focus;switchView('live');});
+  document.querySelectorAll('#view-depto th[data-s]').forEach(th=>th.onclick=()=>{deptoSort=th.dataset.s;renderDepto();});
+  destroyCharts();
+  charts.push(new Chart(dBar,{type:'bar',data:{labels:arr.map(a=>a.d),datasets:[{data:arr.map(a=>a.total),backgroundColor:arr.map(a=>a.d===focus?'#ff7a18':'#2f86ff'),borderRadius:4}]},options:{plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#8a9bb5',maxRotation:60,minRotation:45,font:{size:10}},grid:{display:false}},y:{ticks:{color:'#8a9bb5'},grid:{color:'#22304a'}}},onClick:(e,el)=>{if(el[0]){focus=arr[el[0].index].d;document.getElementById('deptoSel').value=focus;switchView('live');}}}}));
+}
+
+/* ===== EN VIVO (depto) ===== */
+function renderLive(){
+  const P=L();const sc=scope(focus);
+  const leader=Object.entries(sc.marcas)[0]||['—',0];
+  // concentracion local
+  const shares=Object.values(sc.marcas).map(v=>v/sc.total);
+  const hhiL=Math.round(shares.reduce((a,s)=>a+(s*100)**2,0));
+  const top3L=(shares.slice(0,3).reduce((a,b)=>a+b,0)*100).toFixed(1);
+  // IFL tabla: marcas top del depto con su fuerza local
+  const iflRows=Object.entries(sc.marcas).slice(0,12).map(([m,v])=>{const ifl=iflVal(m,focus);return{m,v,sh:pct(v,sc.total),ifl,seg:segOf(m)};});
+  document.getElementById('view-live').innerHTML=`
+   <div class="grid kpis">
+     <div class="card kpi hl"><div class="big">${fmt(sc.total)}</div><div class="lbl">Motos · ${fname(focus)} · ${DS.latest}</div></div>
+     <div class="card kpi"><div class="big" style="color:${COL[leader[0]]||SEGCOL[segOf(leader[0])]}">${leader[0]}</div><div class="lbl">Líder local · ${pct(leader[1],sc.total).toFixed(0)}% (${fmt(leader[1])} u)</div></div>
+     <div class="card kpi"><div class="big">${pct(sc.total,P.total_pais).toFixed(1)}%</div><div class="lbl">Peso en el país</div></div>
+     <div class="card kpi"><div class="big">${Object.keys(sc.marcas).length}</div><div class="lbl">Marcas compitiendo acá</div></div>
+   </div>
+   <div class="grid two" style="margin-top:14px">
+     <div class="card"><h3>Ranking de marcas · ${fname(focus)}</h3>${rankTable(sc.marcas,sc.total,true)}</div>
+     <div>
+       <div class="card"><h3>Índice de Fuerza Local (IFL) — dónde cada marca pega más fuerte que en el país</h3>
+         <table><thead><tr><th>Marca</th><th class="num">Share local</th><th class="num">Share país</th><th class="num">IFL</th></tr></thead><tbody>`+
+         iflRows.map(r=>`<tr><td>${segBadge(r.seg)} ${r.m}</td><td class="num">${r.sh.toFixed(1)}%</td><td class="num">${(P.brand_stats[r.m]||{share:0}).share.toFixed(1)}%</td><td class="num">${iflCell(r.ifl)}</td></tr>`).join('')+
+         `</tbody></table><div class="legend"><span><span class="dot" style="background:#4ade80"></span>IFL ≥ 1.3 sobreíndice (fuerte acá)</span><span><span class="dot" style="background:#f87171"></span>≤ 0.7 subíndice (débil acá)</span></div></div>
+       <div class="card" style="margin-top:14px"><h3>Concentración del mercado local</h3>
+         <div class="grid three">
+           <div><div class="big" style="font-size:26px;font-weight:800">${top3L}%</div><div class="lbl" style="color:var(--mut);font-size:12px">Top-3 marcas</div></div>
+           <div><div class="big" style="font-size:26px;font-weight:800">${hhiL}</div><div class="lbl" style="color:var(--mut);font-size:12px">HHI ${hhiL>2500?'(concentrado)':hhiL>1500?'(moderado)':'(fragmentado)'}</div></div>
+           <div><div class="big" style="font-size:26px;font-weight:800">${Object.keys(sc.marcas).length}</div><div class="lbl" style="color:var(--mut);font-size:12px">Marcas</div></div>
+         </div></div>
+     </div>
+   </div>
+   <div class="grid two" style="margin-top:14px">
+     <div class="card"><h3>Segmento de mercado · ${fname(focus)}</h3><div class="chartbox" style="height:230px"><canvas id="segSel"></canvas></div></div>
+     <div class="card"><h3>Segmento de mercado · País (referencia)</h3><div class="chartbox" style="height:230px"><canvas id="segPais"></canvas></div></div>
+   </div>
+   <div class="note">${DS.nota}</div>`;
+  document.querySelectorAll('#view-live tr').forEach(()=>{});
+  destroyCharts();
+  doughSeg('segSel',segSplit(sc.marcas));
+  doughSeg('segPais',segSplit(P.nac_marcas));
+}
+
+/* ===== ANÁLISIS DE MARCA ===== */
+function renderMarca(){
+  const P=L();const bs=P.brand_stats[marca];
+  if(!bs){document.getElementById('view-marca').innerHTML='<div class="card">Sin datos para esta marca.</div>';return;}
+  const rankNac=Object.keys(P.nac_marcas).indexOf(marca)+1;
+  // por depto: unidades, share local, IFL
+  const rows=DS.deptos.map(d=>{const o=P.deptos[d];if(!o)return null;const u=o.marcas[marca]||0;const sh=pct(u,o.total);const ifl=iflVal(marca,d);return{d,u,sh,ifl,tot:o.total};}).filter(Boolean).sort((a,b)=>b.u-a.u);
+  const maxU=Math.max(...rows.map(r=>r.u),1);
+  const opp=rows.filter(r=>r.u===0||(r.u>0&&r.ifl<0.7)).sort((a,b)=>b.tot-a.tot); // mercados grandes donde la marca es debil o ausente = oportunidad
+  const strong=rows.filter(r=>r.ifl>=1.3);
+  const lectura=r=>r.u===0?'<span class="ifl-lo">Ausente</span>':r.ifl>=1.3?'<span class="ifl-hi">Fuerte</span>':r.ifl<=0.7?'<span class="ifl-lo">Débil</span>':'<span class="ifl-mid">Normal</span>';
+  document.getElementById('view-marca').innerHTML=`
+   <div class="grid kpis">
+     <div class="card kpi hl"><div class="big" style="color:${COL[marca]||SEGCOL[bs.seg]}">${marca}</div><div class="lbl">${segBadge(bs.seg)} · ${DS.latest}</div></div>
+     <div class="card kpi"><div class="big">${fmt(bs.total)}</div><div class="lbl">Unidades país · share ${bs.share}%</div></div>
+     <div class="card kpi"><div class="big">#${rankNac}</div><div class="lbl">Posición nacional (de ${P.n_marcas})</div></div>
+     <div class="card kpi"><div class="big">${bs.n_deptos}/19</div><div class="lbl">Penetración geográfica (${bs.penetracion}%)</div></div>
+   </div>
+   <div class="grid two" style="margin-top:14px">
+     <div class="card"><h3>Dónde más vende ${marca} (unidades)</h3><div class="chartbox"><canvas id="mBar"></canvas></div></div>
+     <div class="card"><h3>Fuerza por departamento (IFL) — verde sobreíndice / rojo oportunidad</h3><div class="chartbox"><canvas id="mIfl"></canvas></div></div>
+   </div>
+   <div class="grid two" style="margin-top:14px">
+     <div class="card"><h3>🎯 Mapa de oportunidad — mercados grandes donde ${marca} está débil o ausente</h3>`+
+       (opp.length?`<table><thead><tr><th>Depto</th><th class="num">Mercado</th><th class="num">${marca}</th><th class="num">Share</th><th>Estado</th></tr></thead><tbody>`+
+       opp.slice(0,8).map(r=>`<tr><td>${r.d}</td><td class="num" style="color:#fff;font-weight:700">${fmt(r.tot)}</td><td class="num">${fmt(r.u)}</td><td class="num">${r.sh.toFixed(1)}%</td><td>${r.u===0?'<span class="ifl-lo">Ausente</span>':'<span class="ifl-lo">Débil ('+r.ifl.toFixed(2)+'×)</span>'}</td></tr>`).join('')+`</tbody></table>`:'<div class="insight">Sin subíndices marcados — la marca rinde parejo o fuerte en todos lados.</div>')+`</div>
+     <div class="card"><h3>💪 Plazas fuertes — donde ${marca} sobreíndexa</h3>`+
+       (strong.length?`<table><thead><tr><th>Depto</th><th class="num">${marca}</th><th class="num">Share</th><th class="num">IFL</th></tr></thead><tbody>`+
+       strong.sort((a,b)=>b.ifl-a.ifl).slice(0,8).map(r=>`<tr><td>${r.d}</td><td class="num">${fmt(r.u)}</td><td class="num">${r.sh.toFixed(1)}%</td><td class="num">${iflCell(r.ifl)}</td></tr>`).join('')+`</tbody></table>`:'<div class="insight">Sin plazas de sobreíndice este mes.</div>')+`</div>
+   </div>
+   <div class="card" style="margin-top:14px"><h3>Detalle por departamento</h3>
+     <table><thead><tr><th>Departamento</th><th class="num">Unidades</th><th class="num">Share local</th><th class="num">IFL</th><th>Lectura</th></tr></thead><tbody>`+
+     rows.map(r=>`<tr><td>${r.d}</td><td class="num" style="color:#fff">${fmt(r.u)}</td><td class="num">${r.sh.toFixed(1)}%</td><td class="num">${iflCell(r.ifl)}</td><td>${lectura(r)}</td></tr>`).join('')+`</tbody></table></div>
+   <div class="note">${DS.nota}</div>`;
+  destroyCharts();
+  const top=rows.slice(0,12);
+  charts.push(new Chart(mBar,{type:'bar',data:{labels:top.map(r=>r.d),datasets:[{data:top.map(r=>r.u),backgroundColor:COL[marca]||SEGCOL[bs.seg],borderRadius:4}]},options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#8a9bb5'},grid:{color:'#22304a'}},y:{ticks:{color:'#8a9bb5',font:{size:11}},grid:{display:false}}}}}));
+  const ir=rows.filter(r=>r.u>0).sort((a,b)=>b.ifl-a.ifl);
+  charts.push(new Chart(mIfl,{type:'bar',data:{labels:ir.map(r=>r.d),datasets:[{data:ir.map(r=>r.ifl),backgroundColor:ir.map(r=>r.ifl>=1.3?'#22c55e':r.ifl<=0.7?'#ef4444':'#64748b'),borderRadius:4}]},options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#8a9bb5'},grid:{color:'#22304a'}},y:{ticks:{color:'#8a9bb5',font:{size:11}},grid:{display:false}}}}}));
+}
+
+/* ===== HISTÓRICO ===== */
+function renderHist(){
+  const P=DS.periods;
+  if(P.length<2){
+    document.getElementById('view-hist').innerHTML=`<div class="card" style="text-align:center;padding:50px 20px">
+      <div style="font-size:40px;margin-bottom:10px">📈</div>
+      <h3 style="font-size:16px;color:var(--txt)">El histórico se está construyendo</h3>
+      <p class="insight" style="max-width:560px;margin:10px auto;color:var(--mut)">Arrancamos limpio en <b>${DS.latest}</b>. Cada mes el sistema baja el nuevo PDF de SUCIVE y suma un punto. Con 2+ meses vas a ver acá las tendencias por marca, crecimiento/caída y estacionalidad — en ${fname(focus)} y en cada departamento.</p>
+      <p class="tag">Próxima actualización automática: principios del mes que viene.</p></div>`;
+    return;
+  }
+  document.getElementById('view-hist').innerHTML=`
+   <div class="grid two"><div class="card"><h3>Tendencia por marca · ${fname(focus)}</h3><div class="chartbox"><canvas id="hMarca"></canvas></div></div>
+   <div class="card"><h3>Total motos/mes · ${fname(focus)} vs País</h3><div class="chartbox"><canvas id="hTotal"></canvas></div></div></div>
+   <div class="card" style="margin-top:14px"><h3>Evolución del share · ${fname(focus)} (%)</h3><div class="chartbox"><canvas id="hShare"></canvas></div></div>`;
+  const mOf=(p,m)=>{const sc=DS.by_period[p];return (focus===PAIS?sc.nac_marcas:(sc.deptos[focus]||{marcas:{}}).marcas)[m]||0;};
+  const tOf=p=>focus===PAIS?DS.by_period[p].total_pais:(DS.by_period[p].deptos[focus]||{total:0}).total;
+  destroyCharts();
+  const ax={scales:{x:{ticks:{color:'#8a9bb5'},grid:{color:'#22304a'}},y:{ticks:{color:'#8a9bb5'},grid:{color:'#22304a'}}},plugins:{legend:{labels:{color:'#e8eef7'}}}};
+  charts.push(new Chart(hMarca,{type:'line',data:{labels:P,datasets:DS.track.map(m=>({label:m,data:P.map(p=>mOf(p,m)),borderColor:COL[m],tension:.3,borderWidth:3,pointRadius:5}))},options:ax}));
+  charts.push(new Chart(hTotal,{type:'line',data:{labels:P,datasets:[{label:fname(focus),data:P.map(tOf),borderColor:'#2f86ff',backgroundColor:'#2f86ff33',tension:.3,borderWidth:3,pointRadius:5,fill:true},{label:'País',data:P.map(p=>DS.by_period[p].total_pais),borderColor:'#8a9bb5',borderDash:[5,5],yAxisID:'y2',pointRadius:4}]},options:{...ax,scales:{...ax.scales,y2:{position:'right',ticks:{color:'#8a9bb5'},grid:{drawOnChartArea:false}}}}}));
+  charts.push(new Chart(hShare,{type:'line',data:{labels:P,datasets:DS.track.map(m=>({label:m,data:P.map(p=>pct(mOf(p,m),tOf(p))),borderColor:COL[m],tension:.3,borderWidth:3,pointRadius:5}))},options:{...ax,scales:{...ax.scales,y:{ticks:{color:'#8a9bb5',callback:v=>v+'%'}}}}}));
+}
+
+function switchView(v){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.v===v));
+  ['depto','live','marca','hist'].forEach(x=>document.getElementById('view-'+x).style.display=x===v?'':'none');
+  ({depto:renderDepto,live:renderLive,marca:renderMarca,hist:renderHist})[v]();
+}
+async function load(){
+  const r=await fetch('dataset.json?t='+Date.now());DS=await r.json();
+  if(!DS.deptos.includes(focus))focus=DS.default_focus||DS.deptos[0];
+  const ds=document.getElementById('deptoSel');
+  ds.innerHTML=`<option value="${PAIS}">🇺🇾 País (todos)</option>`+DS.deptos.map(d=>`<option value="${d}">${d}</option>`).join('');
+  ds.value=focus;
+  const marcas=Object.keys(L().nac_marcas);
+  if(!marcas.includes(marca))marca=marcas[0];
+  document.getElementById('marcaSel').innerHTML=marcas.map(m=>`<option value="${m}">${m}</option>`).join('');
+  document.getElementById('marcaSel').value=marca;
+  document.getElementById('latestLbl').textContent=DS.latest;
+  document.getElementById('foot').textContent='Fuente: SUCIVE (sucive.gub.uy) · Períodos: '+DS.periods.join(' · ')+' · Actualización automática mensual';
+  switchView(document.querySelector('.tab.active').dataset.v);
+}
+document.getElementById('deptoSel').onchange=e=>{focus=e.target.value;const a=document.querySelector('.tab.active').dataset.v;switchView(a==='depto'||a==='marca'?'live':a);};
+document.getElementById('marcaSel').onchange=e=>{marca=e.target.value;switchView('marca');};
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>switchView(t.dataset.v));
+load();setInterval(load,300000);
+</script>
+</body>
+</html>

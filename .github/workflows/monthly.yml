@@ -1,0 +1,43 @@
+name: Scrape SUCIVE mensual
+
+# Corre automatico el dia 5 de cada mes (13:00 UTC ~10:00 Uruguay)
+# y tambien se puede disparar a mano desde la pestana Actions.
+on:
+  schedule:
+    - cron: '0 13 5 * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write   # para commitear los datos nuevos
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
+
+      - name: Bajar y parsear PDF de SUCIVE
+        run: |
+          python capture.py
+          python build_dataset.py
+
+      - name: Commit datos nuevos
+        run: |
+          git config user.name  "sucive-bot"
+          git config user.email "actions@github.com"
+          git add data/ pdfs/ dataset.json
+          if git diff --staged --quiet; then
+            echo "Sin cambios este mes."
+          else
+            git commit -m "Datos SUCIVE $(date +%Y-%m)"
+            git push
+          fi
