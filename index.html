@@ -54,6 +54,8 @@
   .insight b{color:var(--azul)} canvas{max-width:100%}
   .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--mut);margin-top:8px}
   .dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:middle}
+  .zona{transition:opacity .1s;cursor:pointer}
+  .zona:hover{opacity:.8;stroke:#fff !important;stroke-width:2 !important}
 </style>
 </head>
 <body>
@@ -69,12 +71,14 @@
 </header>
 <div class="tabs">
   <div class="tab active" data-v="depto">🗺️ Departamentos</div>
+  <div class="tab" data-v="mapa">🔥 Mapa de Calor</div>
   <div class="tab" data-v="empresa">🏢 Mi Empresa</div>
   <div class="tab" data-v="live">⚡ En Vivo</div>
   <div class="tab" data-v="marca">🎯 Análisis de Marca</div>
   <div class="tab" data-v="hist">📈 Histórico</div>
 </div>
 <div id="view-depto"></div>
+<div id="view-mapa" style="display:none"></div>
 <div id="view-empresa" style="display:none"></div>
 <div id="view-live" style="display:none"></div>
 <div id="view-marca" style="display:none"></div>
@@ -328,10 +332,43 @@ function renderEmpresa(){
   }
 }
 
+/* ===== MAPA DE CALOR (choropleth de Uruguay) ===== */
+let GEO=null, mapaMetric='vol';
+async function ensureGeo(){ if(!GEO){ try{const r=await fetch('geo_uruguay.json'); GEO=await r.json();}catch(_){GEO={w:1000,h:1097,paths:{}};} } return GEO; }
+function heatColor(t){ t=Math.max(0,Math.min(1,t)); const s=[[0,[17,33,60]],[0.5,[245,158,11]],[1,[239,68,68]]]; let a=s[0],b=s[2]; for(let i=0;i<2;i++){if(t>=s[i][0]&&t<=s[i+1][0]){a=s[i];b=s[i+1];break;}} const f=(t-a[0])/((b[0]-a[0])||1); const c=a[1].map((ch,i)=>Math.round(ch+(b[1][i]-ch)*f)); return `rgb(${c[0]},${c[1]},${c[2]})`; }
+function setMapaMetric(m){ mapaMetric=m; renderMapa(); }
+async function renderMapa(){
+  await ensureGeo(); const P=L(); const deps=DS.deptos; const isG=mapaMetric==='growth';
+  const val=d=>{ const o=P.deptos[d]||{total:0,marcas:{}}; if(mapaMetric==='marca') return o.marcas[marca]||0; if(isG){ if(!DS.prev)return 0; const p=(DS.by_period[DS.prev].deptos[d]||{total:0}).total; return p?((o.total-p)/p*100):0;} return o.total; };
+  const vals=deps.map(val); const maxv=Math.max(...vals,1);
+  const norm=v=> isG?(maxv>0?Math.max(0,v)/maxv:0):Math.sqrt(Math.max(0,v)/maxv);
+  const fmtVal=v=> isG?((v>=0?'+':'')+v.toFixed(0)+'%'):fmt(v);
+  const paths=deps.map(d=>`<path d="${(GEO.paths[d]||'')}" fill="${heatColor(norm(val(d)))}" stroke="#0b1220" stroke-width="1" class="zona" data-d="${d}"><title>${d}: ${fmtVal(val(d))}</title></path>`).join('');
+  const rank=deps.map(d=>({d,v:val(d)})).sort((a,b)=>b.v-a.v);
+  const maxr=rank[0]?(Math.abs(rank[0].v)||1):1;
+  const metricLbl = mapaMetric==='marca'?marca : isG?('Crecimiento vs '+DS.prev) : 'Volumen (motos/mes)';
+  const btn=(m,lbl)=>`<div class="tab ${mapaMetric===m?'active':''}" style="padding:7px 12px;font-size:13px" onclick="setMapaMetric('${m}')">${lbl}</div>`;
+  document.getElementById('view-mapa').innerHTML=`
+   <div class="card" style="margin-bottom:14px"><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+     <span class="tag">Colorear por:</span>${btn('vol','🔥 Volumen')}${btn('marca','🏍️ '+marca)}${DS.prev?btn('growth','📈 Crecimiento'):''}
+   </div></div>
+   <div class="grid two">
+     <div class="card"><h3>Mapa de calor · ${metricLbl} · ${DS.latest}</h3>
+       <svg viewBox="0 0 ${GEO.w} ${GEO.h}" style="width:100%;max-height:560px" preserveAspectRatio="xMidYMid meet">${paths}</svg>
+       <div style="display:flex;align-items:center;gap:8px;margin-top:6px;font-size:11px;color:var(--mut)"><span>frío</span><div style="flex:1;height:10px;border-radius:5px;background:linear-gradient(90deg,${heatColor(0)},${heatColor(0.5)},${heatColor(1)})"></div><span>caliente 🔥</span></div></div>
+     <div class="card"><h3>Ranking de zonas calientes</h3>
+       <table><thead><tr><th>#</th><th>Departamento</th><th class="num">${isG?'Crec.':'Valor'}</th><th></th></tr></thead><tbody>`+
+       rank.map((r,i)=>`<tr class="click" data-d="${r.d}"><td>${i+1}</td><td>${r.d}</td><td class="num" style="color:#fff;font-weight:700">${fmtVal(r.v)}</td><td style="width:34%"><div class="bar" style="width:${Math.max(2,Math.abs(r.v)/maxr*100)}%;background:${heatColor(norm(r.v))}"></div></td></tr>`).join('')+
+       `</tbody></table></div>
+   </div>
+   <div class="note">🔥 Cuanto más rojo, más ${isG?'crece':'caliente'} el mercado de motos en esa zona. Clic en un departamento para ver su detalle.</div>`;
+  document.querySelectorAll('#view-mapa .zona,#view-mapa tr.click').forEach(el=>el.addEventListener('click',()=>{focus=el.dataset.d;document.getElementById('deptoSel').value=focus;switchView('live');}));
+}
+
 function switchView(v){
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.v===v));
-  ['depto','empresa','live','marca','hist'].forEach(x=>document.getElementById('view-'+x).style.display=x===v?'':'none');
-  ({depto:renderDepto,empresa:renderEmpresa,live:renderLive,marca:renderMarca,hist:renderHist})[v]();
+  ['depto','mapa','empresa','live','marca','hist'].forEach(x=>document.getElementById('view-'+x).style.display=x===v?'':'none');
+  ({depto:renderDepto,mapa:renderMapa,empresa:renderEmpresa,live:renderLive,marca:renderMarca,hist:renderHist})[v]();
 }
 async function load(){
   const r=await fetch('dataset.json?t='+Date.now());DS=await r.json();
@@ -346,10 +383,11 @@ async function load(){
   document.getElementById('latestLbl').textContent=DS.latest;
   document.getElementById('foot').textContent='Fuente: SUCIVE (sucive.gub.uy) · Períodos: '+DS.periods.join(' · ')+' · Actualización automática mensual';
   const _e=loadEmp();if(_e.empresa)document.querySelector('.sub').innerHTML='Empadronamientos Cat. C · 19 departamentos · <b style="color:var(--azul)">'+_e.empresa+'</b>';
+  ensureGeo();
   switchView(document.querySelector('.tab.active').dataset.v);
 }
 document.getElementById('deptoSel').onchange=e=>{focus=e.target.value;const a=document.querySelector('.tab.active').dataset.v;switchView(a==='depto'||a==='marca'?'live':a);};
-document.getElementById('marcaSel').onchange=e=>{marca=e.target.value;switchView('marca');};
+document.getElementById('marcaSel').onchange=e=>{marca=e.target.value;const a=document.querySelector('.tab.active').dataset.v;switchView(a==='mapa'?'mapa':'marca');};
 document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>switchView(t.dataset.v));
 load();setInterval(load,300000);
 </script>
