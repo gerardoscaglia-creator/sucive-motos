@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SUCIVE Motos · Inteligencia de Mercado</title>
+<title>Mercado de Motos · Uruguay</title>
 <script src="chart.umd.min.js"></script>
 <style>
   :root{--bg:#0b1220;--card:#131c2e;--line:#22304a;--txt:#e8eef7;--mut:#8a9bb5;
@@ -56,32 +56,32 @@
   .dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:middle}
   .zona{transition:opacity .1s;cursor:pointer}
   .zona:hover{opacity:.8;stroke:#fff !important;stroke-width:2 !important}
+  .help{color:var(--mut);font-size:13px;margin:0 0 14px;line-height:1.5;background:#141d30;border:1px solid var(--line);border-radius:10px;padding:10px 14px}
+  .help b{color:var(--txt)}
 </style>
 </head>
 <body>
 <header>
   <div class="brand"><div class="logo">🏍️</div>
-    <div><h1>SUCIVE Motos · Inteligencia de Mercado</h1>
-      <div class="sub">Empadronamientos Cat. C · 19 departamentos</div></div></div>
+    <div><h1>Mercado de Motos · Uruguay</h1>
+      <div class="sub">Datos oficiales de SUCIVE · 19 departamentos</div></div></div>
   <div class="controls">
-    <span class="tag">Depto:</span><select id="deptoSel"></select>
-    <span class="tag">Marca:</span><select id="marcaSel"></select>
-    <div class="periodo">Período: <b id="latestLbl">—</b></div>
+    <span class="tag">📍 Ver zona</span><select id="deptoSel" title="Elegí un departamento para ver su detalle"></select>
+    <span class="tag">🏍️ Ver marca</span><select id="marcaSel" title="Elegí una marca para analizarla"></select>
+    <div class="periodo">Mes: <b id="latestLbl">—</b></div>
   </div>
 </header>
 <div class="tabs">
-  <div class="tab active" data-v="depto">🗺️ Departamentos</div>
-  <div class="tab" data-v="mapa">🔥 Mapa de Calor</div>
-  <div class="tab" data-v="empresa">🏢 Mi Empresa</div>
-  <div class="tab" data-v="live">⚡ En Vivo</div>
-  <div class="tab" data-v="marca">🎯 Análisis de Marca</div>
-  <div class="tab" data-v="hist">📈 Histórico</div>
+  <div class="tab active" data-v="panorama">🔥 Panorama</div>
+  <div class="tab" data-v="live">📍 En tu zona</div>
+  <div class="tab" data-v="marca">🏍️ Por marca</div>
+  <div class="tab" data-v="empresa">🏢 Mi comercio</div>
+  <div class="tab" data-v="hist">📈 Evolución</div>
 </div>
-<div id="view-depto"></div>
-<div id="view-mapa" style="display:none"></div>
-<div id="view-empresa" style="display:none"></div>
+<div id="view-panorama"></div>
 <div id="view-live" style="display:none"></div>
 <div id="view-marca" style="display:none"></div>
+<div id="view-empresa" style="display:none"></div>
 <div id="view-hist" style="display:none"></div>
 <div class="foot" id="foot">cargando…</div>
 <script>
@@ -111,28 +111,46 @@ function segSplit(marcas){const t={economica:0,media:0,premium:0,electrica:0,otr
 function doughSeg(id,sp){charts.push(new Chart(document.getElementById(id),{type:'doughnut',data:{labels:Object.keys(sp).map(k=>SEGLBL[k]),datasets:[{data:Object.values(sp),backgroundColor:Object.keys(sp).map(k=>SEGCOL[k]),borderWidth:0}]},options:{plugins:{legend:{position:'bottom',labels:{color:'#8a9bb5',boxWidth:9,font:{size:10}}}},cutout:'58%'}}));}
 
 /* ===== DEPARTAMENTOS ===== */
-function renderDepto(){
-  const P=L();const deptos=Object.entries(P.deptos);
-  let arr=deptos.map(([d,o])=>{const t=Object.entries(o.marcas)[0]||['—',0];return{d,total:o.total,top:t[0],topv:t[1]};});
+async function renderPanorama(){
+  await ensureGeo();
+  const P=L();const deps=DS.deptos;const isG=mapaMetric==='growth';
+  const arr=Object.entries(P.deptos).map(([d,o])=>{const t=Object.entries(o.marcas)[0]||['—',0];return{d,total:o.total,top:t[0],topv:t[1]};});
   if(deptoSort==='nombre')arr.sort((a,b)=>a.d.localeCompare(b.d));else arr.sort((a,b)=>b.total-a.total);
-  const max=Math.max(...arr.map(a=>a.total));
-  document.getElementById('view-depto').innerHTML=`
+  const maxtot=Math.max(...arr.map(a=>a.total),1);
+  const val=d=>{const o=P.deptos[d]||{total:0,marcas:{}};if(mapaMetric==='marca')return o.marcas[marca]||0;if(isG){if(!DS.prev)return 0;const p=(DS.by_period[DS.prev].deptos[d]||{total:0}).total;return p?((o.total-p)/p*100):0;}return o.total;};
+  const maxv=Math.max(...deps.map(val),1);
+  const norm=v=>isG?(maxv>0?Math.max(0,v)/maxv:0):Math.sqrt(Math.max(0,v)/maxv);
+  const fmtVal=v=>isG?((v>=0?'+':'')+v.toFixed(0)+'%'):fmt(v);
+  const paths=deps.map(d=>`<path d="${(GEO.paths[d]||'')}" fill="${heatColor(norm(val(d)))}" stroke="#0b1220" stroke-width="1" class="zona" data-d="${d}"><title>${d}: ${fmtVal(val(d))}</title></path>`).join('');
+  const rank=deps.map(d=>({d,v:val(d)})).sort((a,b)=>b.v-a.v);const maxr=rank[0]?(Math.abs(rank[0].v)||1):1;
+  const metricLbl=mapaMetric==='marca'?marca:isG?('Crecimiento vs '+DS.prev):'Cantidad de motos';
+  const btn=(m,lbl)=>`<div class="tab ${mapaMetric===m?'active':''}" style="padding:6px 11px;font-size:13px" onclick="setMapaMetric('${m}')">${lbl}</div>`;
+  document.getElementById('view-panorama').innerHTML=`
+   <div class="help">🔥 <b>Dónde se venden más motos en Uruguay.</b> El mapa pinta de rojo las zonas más calientes. Tocá un departamento (en el mapa o en la lista) para ver su detalle.</div>
    <div class="grid kpis">
-     <div class="card kpi"><div class="big">${fmt(P.total_pais)}</div><div class="lbl">Total motos país · ${DS.latest}</div></div>
-     <div class="card kpi"><div class="big" style="color:var(--azul)">${arr[0].d}</div><div class="lbl">Mayor mercado · ${fmt(arr[0].total)} u</div></div>
-     <div class="card kpi"><div class="big">${P.n_marcas}</div><div class="lbl">Marcas activas en el país</div></div>
-     <div class="card kpi"><div class="big">${P.top3_share}%</div><div class="lbl">Top-3 marcas · concentración</div></div>
+     <div class="card kpi"><div class="big">${fmt(P.total_pais)}</div><div class="lbl">Motos en todo el país · ${DS.latest}</div></div>
+     <div class="card kpi"><div class="big" style="color:var(--azul)">${rank[0]?rank[0].d:'—'}</div><div class="lbl">Zona más caliente</div></div>
+     <div class="card kpi"><div class="big">${P.n_marcas}</div><div class="lbl">Marcas a la venta</div></div>
+     <div class="card kpi"><div class="big">${P.top3_share}%</div><div class="lbl">Lo acaparan las 3 marcas top</div></div>
    </div>
-   <div class="card" style="margin-top:14px"><h3>Total de motos por departamento — clic para ver su detalle</h3>
-     <table><thead><tr><th data-s="nombre">Departamento</th><th class="num" data-s="total">Motos</th><th class="num">Share país</th><th>Marca líder</th><th></th></tr></thead><tbody>`+
-     arr.map(a=>`<tr class="click ${a.d===focus?'focus':''}" data-d="${a.d}"><td>${a.d}</td><td class="num" style="color:#fff;font-weight:700">${fmt(a.total)}</td><td class="num">${pct(a.total,P.total_pais).toFixed(1)}%</td><td><span style="color:${COL[a.top]||SEGCOL[segOf(a.top)]};font-weight:600">${a.top}</span> <span class="tag">${fmt(a.topv)}</span></td><td style="width:22%"><div class="bar" style="width:${a.total/max*100}%"></div></td></tr>`).join('')+
+   <div class="card" style="margin-top:14px"><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><span class="tag">Pintar el mapa por:</span>${btn('vol','🔥 Cantidad')}${btn('marca','🏍️ '+marca)}${DS.prev?btn('growth','📈 Crecimiento'):''}</div></div>
+   <div class="grid two" style="margin-top:14px">
+     <div class="card"><h3>Mapa de calor · ${metricLbl}</h3>
+       <svg viewBox="0 0 ${GEO.w} ${GEO.h}" style="width:100%;max-height:540px" preserveAspectRatio="xMidYMid meet">${paths}</svg>
+       <div style="display:flex;align-items:center;gap:8px;margin-top:6px;font-size:11px;color:var(--mut)"><span>menos</span><div style="flex:1;height:10px;border-radius:5px;background:linear-gradient(90deg,${heatColor(0)},${heatColor(0.5)},${heatColor(1)})"></div><span>más 🔥</span></div></div>
+     <div class="card"><h3>Ranking de zonas</h3>
+       <table><thead><tr><th>#</th><th>Departamento</th><th class="num">${isG?'Crec.':metricLbl}</th><th></th></tr></thead><tbody>`+
+       rank.map((r,i)=>`<tr class="click" data-d="${r.d}"><td>${i+1}</td><td>${r.d}</td><td class="num" style="color:#fff;font-weight:700">${fmtVal(r.v)}</td><td style="width:30%"><div class="bar" style="width:${Math.max(2,Math.abs(r.v)/maxr*100)}%;background:${heatColor(norm(r.v))}"></div></td></tr>`).join('')+
+       `</tbody></table></div>
+   </div>
+   <div class="card" style="margin-top:14px"><h3>Detalle por departamento — tocá uno para ver más</h3>
+     <table><thead><tr><th data-s="nombre">Departamento</th><th class="num" data-s="total">Motos</th><th class="num">% del país</th><th>Marca que más vende</th><th></th></tr></thead><tbody>`+
+     arr.map(a=>`<tr class="click ${a.d===focus?'focus':''}" data-d="${a.d}"><td>${a.d}</td><td class="num" style="color:#fff;font-weight:700">${fmt(a.total)}</td><td class="num">${pct(a.total,P.total_pais).toFixed(1)}%</td><td><span style="color:${COL[a.top]||SEGCOL[segOf(a.top)]};font-weight:600">${a.top}</span> <span class="tag">${fmt(a.topv)}</span></td><td style="width:20%"><div class="bar" style="width:${a.total/maxtot*100}%"></div></td></tr>`).join('')+
      `</tbody></table></div>
-   <div class="card" style="margin-top:14px"><h3>Ranking de mercados · ${DS.latest}</h3><div class="chartbox" style="height:340px"><canvas id="dBar"></canvas></div></div>
    <div class="note">${DS.nota}</div>`;
-  document.querySelectorAll('#view-depto tr.click').forEach(tr=>tr.onclick=()=>{focus=tr.dataset.d;document.getElementById('deptoSel').value=focus;switchView('live');});
-  document.querySelectorAll('#view-depto th[data-s]').forEach(th=>th.onclick=()=>{deptoSort=th.dataset.s;renderDepto();});
   destroyCharts();
-  charts.push(new Chart(dBar,{type:'bar',data:{labels:arr.map(a=>a.d),datasets:[{data:arr.map(a=>a.total),backgroundColor:arr.map(a=>a.d===focus?'#ff7a18':'#2f86ff'),borderRadius:4}]},options:{plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#8a9bb5',maxRotation:60,minRotation:45,font:{size:10}},grid:{display:false}},y:{ticks:{color:'#8a9bb5'},grid:{color:'#22304a'}}},onClick:(e,el)=>{if(el[0]){focus=arr[el[0].index].d;document.getElementById('deptoSel').value=focus;switchView('live');}}}}));
+  document.querySelectorAll('#view-panorama .zona,#view-panorama tr.click').forEach(el=>el.addEventListener('click',()=>{focus=el.dataset.d;document.getElementById('deptoSel').value=focus;switchView('live');}));
+  document.querySelectorAll('#view-panorama th[data-s]').forEach(th=>th.onclick=()=>{deptoSort=th.dataset.s;renderPanorama();});
 }
 
 /* ===== EN VIVO (depto) ===== */
@@ -146,6 +164,7 @@ function renderLive(){
   // IFL tabla: marcas top del depto con su fuerza local
   const iflRows=Object.entries(sc.marcas).slice(0,12).map(([m,v])=>{const ifl=iflVal(m,focus);return{m,v,sh:pct(v,sc.total),ifl,seg:segOf(m)};});
   document.getElementById('view-live').innerHTML=`
+   <div class="help">📍 <b>Cómo está el mercado en ${fname(focus)}.</b> Qué marcas se venden más acá y cuáles pegan más fuerte que en el resto del país. Para cambiar de zona usá "📍 Ver zona" arriba a la derecha.</div>
    <div class="grid kpis">
      <div class="card kpi hl"><div class="big">${fmt(sc.total)}</div><div class="lbl">Motos · ${fname(focus)} · ${DS.latest}</div></div>
      <div class="card kpi"><div class="big" style="color:${COL[leader[0]]||SEGCOL[segOf(leader[0])]}">${leader[0]}</div><div class="lbl">Líder local · ${pct(leader[1],sc.total).toFixed(0)}% (${fmt(leader[1])} u)</div></div>
@@ -155,14 +174,14 @@ function renderLive(){
    <div class="grid two" style="margin-top:14px">
      <div class="card"><h3>Ranking de marcas · ${fname(focus)}</h3>${rankTable(sc.marcas,sc.total,true)}</div>
      <div>
-       <div class="card"><h3>Índice de Fuerza Local (IFL) — dónde cada marca pega más fuerte que en el país</h3>
-         <table><thead><tr><th>Marca</th><th class="num">Share local</th><th class="num">Share país</th><th class="num">IFL</th></tr></thead><tbody>`+
+       <div class="card"><h3>Fuerza local — qué marcas pegan más fuerte acá que en el resto del país</h3>
+         <table><thead><tr><th>Marca</th><th class="num">% acá</th><th class="num">% país</th><th class="num">Fuerza</th></tr></thead><tbody>`+
          iflRows.map(r=>`<tr><td>${segBadge(r.seg)} ${r.m}</td><td class="num">${r.sh.toFixed(1)}%</td><td class="num">${(P.brand_stats[r.m]||{share:0}).share.toFixed(1)}%</td><td class="num">${iflCell(r.ifl)}</td></tr>`).join('')+
-         `</tbody></table><div class="legend"><span><span class="dot" style="background:#4ade80"></span>IFL ≥ 1.3 sobreíndice (fuerte acá)</span><span><span class="dot" style="background:#f87171"></span>≤ 0.7 subíndice (débil acá)</span></div></div>
+         `</tbody></table><div class="legend"><span><span class="dot" style="background:#4ade80"></span>1.3× o más = se vende más acá que en el país</span><span><span class="dot" style="background:#f87171"></span>0.7× o menos = se vende menos acá</span></div></div>
        <div class="card" style="margin-top:14px"><h3>Concentración del mercado local</h3>
          <div class="grid three">
            <div><div class="big" style="font-size:26px;font-weight:800">${top3L}%</div><div class="lbl" style="color:var(--mut);font-size:12px">Top-3 marcas</div></div>
-           <div><div class="big" style="font-size:26px;font-weight:800">${hhiL}</div><div class="lbl" style="color:var(--mut);font-size:12px">HHI ${hhiL>2500?'(concentrado)':hhiL>1500?'(moderado)':'(fragmentado)'}</div></div>
+           <div><div class="big" style="font-size:26px;font-weight:800">${hhiL>2500?'Alta':hhiL>1500?'Media':'Baja'}</div><div class="lbl" style="color:var(--mut);font-size:12px">Concentración del mercado</div></div>
            <div><div class="big" style="font-size:26px;font-weight:800">${Object.keys(sc.marcas).length}</div><div class="lbl" style="color:var(--mut);font-size:12px">Marcas</div></div>
          </div></div>
      </div>
@@ -190,26 +209,27 @@ function renderMarca(){
   const strong=rows.filter(r=>r.ifl>=1.3);
   const lectura=r=>r.u===0?'<span class="ifl-lo">Ausente</span>':r.ifl>=1.3?'<span class="ifl-hi">Fuerte</span>':r.ifl<=0.7?'<span class="ifl-lo">Débil</span>':'<span class="ifl-mid">Normal</span>';
   document.getElementById('view-marca').innerHTML=`
+   <div class="help">🏍️ <b>Todo sobre ${marca}.</b> Cuánto vende en el país, dónde es fuerte y en qué zonas tiene lugar para crecer. Para cambiar de marca usá "🏍️ Ver marca" arriba a la derecha.</div>
    <div class="grid kpis">
      <div class="card kpi hl"><div class="big" style="color:${COL[marca]||SEGCOL[bs.seg]}">${marca}</div><div class="lbl">${segBadge(bs.seg)} · ${DS.latest}</div></div>
-     <div class="card kpi"><div class="big">${fmt(bs.total)}</div><div class="lbl">Unidades país · share ${bs.share}%</div></div>
-     <div class="card kpi"><div class="big">#${rankNac}</div><div class="lbl">Posición nacional (de ${P.n_marcas})</div></div>
-     <div class="card kpi"><div class="big">${bs.n_deptos}/19</div><div class="lbl">Penetración geográfica (${bs.penetracion}%)</div></div>
+     <div class="card kpi"><div class="big">${fmt(bs.total)}</div><div class="lbl">Motos en el país (${bs.share}% del total)</div></div>
+     <div class="card kpi"><div class="big">#${rankNac}</div><div class="lbl">Puesto en el país (de ${P.n_marcas} marcas)</div></div>
+     <div class="card kpi"><div class="big">${bs.n_deptos}/19</div><div class="lbl">Se vende en ${bs.n_deptos} de 19 deptos</div></div>
    </div>
    <div class="grid two" style="margin-top:14px">
      <div class="card"><h3>Dónde más vende ${marca} (unidades)</h3><div class="chartbox"><canvas id="mBar"></canvas></div></div>
-     <div class="card"><h3>Fuerza por departamento (IFL) — verde sobreíndice / rojo oportunidad</h3><div class="chartbox"><canvas id="mIfl"></canvas></div></div>
+     <div class="card"><h3>Fuerza por departamento — verde: se vende más que el promedio · rojo: oportunidad</h3><div class="chartbox"><canvas id="mIfl"></canvas></div></div>
    </div>
    <div class="grid two" style="margin-top:14px">
      <div class="card"><h3>🎯 Mapa de oportunidad — mercados grandes donde ${marca} está débil o ausente</h3>`+
-       (opp.length?`<table><thead><tr><th>Depto</th><th class="num">Mercado</th><th class="num">${marca}</th><th class="num">Share</th><th>Estado</th></tr></thead><tbody>`+
+       (opp.length?`<table><thead><tr><th>Depto</th><th class="num">Mercado</th><th class="num">${marca}</th><th class="num">% local</th><th>Estado</th></tr></thead><tbody>`+
        opp.slice(0,8).map(r=>`<tr><td>${r.d}</td><td class="num" style="color:#fff;font-weight:700">${fmt(r.tot)}</td><td class="num">${fmt(r.u)}</td><td class="num">${r.sh.toFixed(1)}%</td><td>${r.u===0?'<span class="ifl-lo">Ausente</span>':'<span class="ifl-lo">Débil ('+r.ifl.toFixed(2)+'×)</span>'}</td></tr>`).join('')+`</tbody></table>`:'<div class="insight">Sin subíndices marcados — la marca rinde parejo o fuerte en todos lados.</div>')+`</div>
      <div class="card"><h3>💪 Plazas fuertes — donde ${marca} sobreíndexa</h3>`+
-       (strong.length?`<table><thead><tr><th>Depto</th><th class="num">${marca}</th><th class="num">Share</th><th class="num">IFL</th></tr></thead><tbody>`+
+       (strong.length?`<table><thead><tr><th>Depto</th><th class="num">${marca}</th><th class="num">% local</th><th class="num">Fuerza</th></tr></thead><tbody>`+
        strong.sort((a,b)=>b.ifl-a.ifl).slice(0,8).map(r=>`<tr><td>${r.d}</td><td class="num">${fmt(r.u)}</td><td class="num">${r.sh.toFixed(1)}%</td><td class="num">${iflCell(r.ifl)}</td></tr>`).join('')+`</tbody></table>`:'<div class="insight">Sin plazas de sobreíndice este mes.</div>')+`</div>
    </div>
    <div class="card" style="margin-top:14px"><h3>Detalle por departamento</h3>
-     <table><thead><tr><th>Departamento</th><th class="num">Unidades</th><th class="num">Share local</th><th class="num">IFL</th><th>Lectura</th></tr></thead><tbody>`+
+     <table><thead><tr><th>Departamento</th><th class="num">Unidades</th><th class="num">% local</th><th class="num">Fuerza</th><th>Lectura</th></tr></thead><tbody>`+
      rows.map(r=>`<tr><td>${r.d}</td><td class="num" style="color:#fff">${fmt(r.u)}</td><td class="num">${r.sh.toFixed(1)}%</td><td class="num">${iflCell(r.ifl)}</td><td>${lectura(r)}</td></tr>`).join('')+`</tbody></table></div>
    <div class="note">${DS.nota}</div>`;
   destroyCharts();
@@ -231,6 +251,7 @@ function renderHist(){
     return;
   }
   document.getElementById('view-hist').innerHTML=`
+   <div class="help">📈 <b>Cómo evolucionó el mercado mes a mes en ${fname(focus)}.</b> Qué marcas suben y cuáles bajan. Usá "📍 Ver zona" para cambiar de departamento.</div>
    <div class="grid two"><div class="card"><h3>Tendencia por marca · ${fname(focus)}</h3><div class="chartbox"><canvas id="hMarca"></canvas></div></div>
    <div class="card"><h3>Total motos/mes · ${fname(focus)} vs País</h3><div class="chartbox"><canvas id="hTotal"></canvas></div></div></div>
    <div class="card" style="margin-top:14px"><h3>Evolución del share · ${fname(focus)} (%)</h3><div class="chartbox"><canvas id="hShare"></canvas></div></div>`;
@@ -246,7 +267,7 @@ function renderHist(){
 /* ===== MI EMPRESA (el cliente carga sus ventas) ===== */
 function loadEmp(){try{const e=JSON.parse(localStorage.getItem('sucive_miempresa'))||{};e.data=e.data||{};return e;}catch(_){return {empresa:'',data:{}};}}
 function saveEmp(e){localStorage.setItem('sucive_miempresa',JSON.stringify(e));}
-function empName(v){const e=loadEmp();e.empresa=v;saveEmp(e);const s=document.querySelector('.sub');if(s)s.innerHTML='Empadronamientos Cat. C · 19 departamentos'+(v?' · <b style="color:var(--azul)">'+v+'</b>':'');}
+function empName(v){const e=loadEmp();e.empresa=v;saveEmp(e);const s=document.querySelector('.sub');if(s)s.innerHTML='Datos oficiales de SUCIVE'+(v?' · <b style="color:var(--azul)">'+v+'</b>':'');}
 function empZona(v){const e=loadEmp();e.depto=v;saveEmp(e);renderEmpresa();}
 function empAdd(){const m=document.getElementById('empMarca').value;const u=parseInt(document.getElementById('empUnid').value,10)||0;if(!u)return;const e=loadEmp();e.data[DS.latest]=e.data[DS.latest]||{};e.data[DS.latest][m]=u;saveEmp(e);renderEmpresa();}
 function empDel(m){const e=loadEmp();if(e.data[DS.latest])delete e.data[DS.latest][m];saveEmp(e);renderEmpresa();}
@@ -287,7 +308,8 @@ function renderEmpresa(){
   const marcaOpts=Object.keys(P.nac_marcas).map(m=>`<option value="${m}">${m}</option>`).join('');
   const nameVal=(emp.empresa||'').replace(/"/g,'&quot;');
   document.getElementById('view-empresa').innerHTML=`
-   <div class="card" style="margin-bottom:14px"><h3>Cargá tu comercio y tus ventas por modelo</h3>
+   <div class="help">🏢 <b>Tu comercio contra el mercado real.</b> Cargá cuántas motos vendiste de cada modelo en tu departamento y te muestro qué porcentaje del mercado capturás, dónde estás dejando ventas y qué conviene sumar. Tus datos quedan solo en este navegador.</div>
+   <div class="card" style="margin-bottom:14px"><h3>1) Cargá tu comercio y tus ventas por modelo</h3>
      <div class="row">
        <div class="field"><span class="tag">Nombre del comercio</span><input id="empNombre" value="${nameVal}" placeholder="Ej: Motos del Litoral" style="width:200px"></div>
        <div class="field"><span class="tag">Tu departamento (zona)</span><select id="empZona">${zonaOpts}</select></div>
@@ -336,39 +358,12 @@ function renderEmpresa(){
 let GEO=null, mapaMetric='vol';
 async function ensureGeo(){ if(!GEO){ try{const r=await fetch('geo_uruguay.json'); GEO=await r.json();}catch(_){GEO={w:1000,h:1097,paths:{}};} } return GEO; }
 function heatColor(t){ t=Math.max(0,Math.min(1,t)); const s=[[0,[17,33,60]],[0.5,[245,158,11]],[1,[239,68,68]]]; let a=s[0],b=s[2]; for(let i=0;i<2;i++){if(t>=s[i][0]&&t<=s[i+1][0]){a=s[i];b=s[i+1];break;}} const f=(t-a[0])/((b[0]-a[0])||1); const c=a[1].map((ch,i)=>Math.round(ch+(b[1][i]-ch)*f)); return `rgb(${c[0]},${c[1]},${c[2]})`; }
-function setMapaMetric(m){ mapaMetric=m; renderMapa(); }
-async function renderMapa(){
-  await ensureGeo(); const P=L(); const deps=DS.deptos; const isG=mapaMetric==='growth';
-  const val=d=>{ const o=P.deptos[d]||{total:0,marcas:{}}; if(mapaMetric==='marca') return o.marcas[marca]||0; if(isG){ if(!DS.prev)return 0; const p=(DS.by_period[DS.prev].deptos[d]||{total:0}).total; return p?((o.total-p)/p*100):0;} return o.total; };
-  const vals=deps.map(val); const maxv=Math.max(...vals,1);
-  const norm=v=> isG?(maxv>0?Math.max(0,v)/maxv:0):Math.sqrt(Math.max(0,v)/maxv);
-  const fmtVal=v=> isG?((v>=0?'+':'')+v.toFixed(0)+'%'):fmt(v);
-  const paths=deps.map(d=>`<path d="${(GEO.paths[d]||'')}" fill="${heatColor(norm(val(d)))}" stroke="#0b1220" stroke-width="1" class="zona" data-d="${d}"><title>${d}: ${fmtVal(val(d))}</title></path>`).join('');
-  const rank=deps.map(d=>({d,v:val(d)})).sort((a,b)=>b.v-a.v);
-  const maxr=rank[0]?(Math.abs(rank[0].v)||1):1;
-  const metricLbl = mapaMetric==='marca'?marca : isG?('Crecimiento vs '+DS.prev) : 'Volumen (motos/mes)';
-  const btn=(m,lbl)=>`<div class="tab ${mapaMetric===m?'active':''}" style="padding:7px 12px;font-size:13px" onclick="setMapaMetric('${m}')">${lbl}</div>`;
-  document.getElementById('view-mapa').innerHTML=`
-   <div class="card" style="margin-bottom:14px"><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-     <span class="tag">Colorear por:</span>${btn('vol','🔥 Volumen')}${btn('marca','🏍️ '+marca)}${DS.prev?btn('growth','📈 Crecimiento'):''}
-   </div></div>
-   <div class="grid two">
-     <div class="card"><h3>Mapa de calor · ${metricLbl} · ${DS.latest}</h3>
-       <svg viewBox="0 0 ${GEO.w} ${GEO.h}" style="width:100%;max-height:560px" preserveAspectRatio="xMidYMid meet">${paths}</svg>
-       <div style="display:flex;align-items:center;gap:8px;margin-top:6px;font-size:11px;color:var(--mut)"><span>frío</span><div style="flex:1;height:10px;border-radius:5px;background:linear-gradient(90deg,${heatColor(0)},${heatColor(0.5)},${heatColor(1)})"></div><span>caliente 🔥</span></div></div>
-     <div class="card"><h3>Ranking de zonas calientes</h3>
-       <table><thead><tr><th>#</th><th>Departamento</th><th class="num">${isG?'Crec.':'Valor'}</th><th></th></tr></thead><tbody>`+
-       rank.map((r,i)=>`<tr class="click" data-d="${r.d}"><td>${i+1}</td><td>${r.d}</td><td class="num" style="color:#fff;font-weight:700">${fmtVal(r.v)}</td><td style="width:34%"><div class="bar" style="width:${Math.max(2,Math.abs(r.v)/maxr*100)}%;background:${heatColor(norm(r.v))}"></div></td></tr>`).join('')+
-       `</tbody></table></div>
-   </div>
-   <div class="note">🔥 Cuanto más rojo, más ${isG?'crece':'caliente'} el mercado de motos en esa zona. Clic en un departamento para ver su detalle.</div>`;
-  document.querySelectorAll('#view-mapa .zona,#view-mapa tr.click').forEach(el=>el.addEventListener('click',()=>{focus=el.dataset.d;document.getElementById('deptoSel').value=focus;switchView('live');}));
-}
+function setMapaMetric(m){ mapaMetric=m; renderPanorama(); }
 
 function switchView(v){
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.v===v));
-  ['depto','mapa','empresa','live','marca','hist'].forEach(x=>document.getElementById('view-'+x).style.display=x===v?'':'none');
-  ({depto:renderDepto,mapa:renderMapa,empresa:renderEmpresa,live:renderLive,marca:renderMarca,hist:renderHist})[v]();
+  ['panorama','empresa','live','marca','hist'].forEach(x=>document.getElementById('view-'+x).style.display=x===v?'':'none');
+  ({panorama:renderPanorama,empresa:renderEmpresa,live:renderLive,marca:renderMarca,hist:renderHist})[v]();
 }
 async function load(){
   const r=await fetch('dataset.json?t='+Date.now());DS=await r.json();
@@ -382,12 +377,12 @@ async function load(){
   document.getElementById('marcaSel').value=marca;
   document.getElementById('latestLbl').textContent=DS.latest;
   document.getElementById('foot').textContent='Fuente: SUCIVE (sucive.gub.uy) · Períodos: '+DS.periods.join(' · ')+' · Actualización automática mensual';
-  const _e=loadEmp();if(_e.empresa)document.querySelector('.sub').innerHTML='Empadronamientos Cat. C · 19 departamentos · <b style="color:var(--azul)">'+_e.empresa+'</b>';
+  const _e=loadEmp();if(_e.empresa)document.querySelector('.sub').innerHTML='Datos oficiales de SUCIVE · <b style="color:var(--azul)">'+_e.empresa+'</b>';
   ensureGeo();
   switchView(document.querySelector('.tab.active').dataset.v);
 }
-document.getElementById('deptoSel').onchange=e=>{focus=e.target.value;const a=document.querySelector('.tab.active').dataset.v;switchView(a==='depto'||a==='marca'?'live':a);};
-document.getElementById('marcaSel').onchange=e=>{marca=e.target.value;const a=document.querySelector('.tab.active').dataset.v;switchView(a==='mapa'?'mapa':'marca');};
+document.getElementById('deptoSel').onchange=e=>{focus=e.target.value;switchView('live');};
+document.getElementById('marcaSel').onchange=e=>{marca=e.target.value;const a=document.querySelector('.tab.active').dataset.v;switchView(a==='panorama'?'panorama':'marca');};
 document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>switchView(t.dataset.v));
 load();setInterval(load,300000);
 </script>

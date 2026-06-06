@@ -78,7 +78,7 @@ def main():
         "periods": plist, "latest": plist[-1] if plist else None,
         "prev": plist[-2] if len(plist) > 1 else None,
         "by_period": by_period,
-        "nota": "SUCIVE publica solo el mes corriente. La serie se construye automatica mes a mes desde aqui. Segmentacion de marcas estimada. IFL = share local / share pais (>1 la marca pega mas fuerte en ese depto).",
+        "nota": "Datos oficiales de SUCIVE (empadronamientos del mes). La serie se arma sola, mes a mes. La 'fuerza local' compara cuanto se vende una marca en una zona contra su promedio en el pais (1.3x = se vende mas ahi; 0.7x = menos). Segmentacion de marcas estimada.",
     }
     json.dump(dataset, open(os.path.join(BASE, "dataset.json"), "w", encoding="utf-8"),
               ensure_ascii=False, indent=2)
