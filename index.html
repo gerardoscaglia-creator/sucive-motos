@@ -117,13 +117,15 @@ async function renderPanorama(){
   const arr=Object.entries(P.deptos).map(([d,o])=>{const t=Object.entries(o.marcas)[0]||['—',0];return{d,total:o.total,top:t[0],topv:t[1]};});
   if(deptoSort==='nombre')arr.sort((a,b)=>a.d.localeCompare(b.d));else arr.sort((a,b)=>b.total-a.total);
   const maxtot=Math.max(...arr.map(a=>a.total),1);
-  const val=d=>{const o=P.deptos[d]||{total:0,marcas:{}};if(mapaMetric==='marca')return o.marcas[marca]||0;if(isG){if(!DS.prev)return 0;const p=(DS.by_period[DS.prev].deptos[d]||{total:0}).total;return p?((o.total-p)/p*100):0;}return o.total;};
+  const isPC=mapaMetric==='percap';
+  const val=d=>{const o=P.deptos[d]||{total:0,marcas:{}};if(mapaMetric==='marca')return o.marcas[marca]||0;if(isPC){const pob=(DS.poblacion||{})[d]||0;return pob?o.total/pob*10000:0;}if(isG){if(!DS.prev)return 0;const p=(DS.by_period[DS.prev].deptos[d]||{total:0}).total;return p?((o.total-p)/p*100):0;}return o.total;};
   const maxv=Math.max(...deps.map(val),1);
-  const norm=v=>isG?(maxv>0?Math.max(0,v)/maxv:0):Math.sqrt(Math.max(0,v)/maxv);
-  const fmtVal=v=>isG?((v>=0?'+':'')+v.toFixed(0)+'%'):fmt(v);
-  const paths=deps.map(d=>`<path d="${(GEO.paths[d]||'')}" fill="${heatColor(norm(val(d)))}" stroke="#0b1220" stroke-width="1" class="zona" data-d="${d}"><title>${d}: ${fmtVal(val(d))}</title></path>`).join('');
+  const norm=v=>(isG||isPC)?(maxv>0?Math.max(0,v)/maxv:0):Math.sqrt(Math.max(0,v)/maxv);
+  const fmtVal=v=>isG?((v>=0?'+':'')+v.toFixed(0)+'%'):isPC?v.toFixed(1):fmt(v);
+  const paths=deps.map(d=>`<path d="${(GEO.paths[d]||'')}" fill="${heatColor(norm(val(d)))}" stroke="#0b1220" stroke-width="1" class="zona" data-d="${d}"><title>${d}: ${fmtVal(val(d))}${isPC?' por 10.000 hab':''}</title></path>`).join('');
   const rank=deps.map(d=>({d,v:val(d)})).sort((a,b)=>b.v-a.v);const maxr=rank[0]?(Math.abs(rank[0].v)||1):1;
-  const metricLbl=mapaMetric==='marca'?marca:isG?('Crecimiento vs '+DS.prev):'Cantidad de motos';
+  const metricLbl=mapaMetric==='marca'?marca:isG?('Crecimiento vs '+DS.prev):isPC?'Motos por 10.000 habitantes':'Cantidad de motos';
+  const colLbl=isG?'Crec.':isPC?'x10.000 hab':mapaMetric==='marca'?marca:'Motos';
   const btn=(m,lbl)=>`<div class="tab ${mapaMetric===m?'active':''}" style="padding:6px 11px;font-size:13px" onclick="setMapaMetric('${m}')">${lbl}</div>`;
   document.getElementById('view-panorama').innerHTML=`
    <div class="help">🔥 <b>Dónde se venden más motos en Uruguay.</b> El mapa pinta de rojo las zonas más calientes. Tocá un departamento (en el mapa o en la lista) para ver su detalle.</div>
@@ -133,13 +135,13 @@ async function renderPanorama(){
      <div class="card kpi"><div class="big">${P.n_marcas}</div><div class="lbl">Marcas a la venta</div></div>
      <div class="card kpi"><div class="big">${P.top3_share}%</div><div class="lbl">Lo acaparan las 3 marcas top</div></div>
    </div>
-   <div class="card" style="margin-top:14px"><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><span class="tag">Pintar el mapa por:</span>${btn('vol','🔥 Cantidad')}${btn('marca','🏍️ '+marca)}${DS.prev?btn('growth','📈 Crecimiento'):''}</div></div>
+   <div class="card" style="margin-top:14px"><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><span class="tag">Pintar el mapa por:</span>${btn('vol','🔥 Cantidad')}${btn('percap','👥 Por habitante')}${btn('marca','🏍️ '+marca)}${DS.prev?btn('growth','📈 Crecimiento'):''}</div></div>
    <div class="grid two" style="margin-top:14px">
      <div class="card"><h3>Mapa de calor · ${metricLbl}</h3>
        <svg viewBox="0 0 ${GEO.w} ${GEO.h}" style="width:100%;max-height:540px" preserveAspectRatio="xMidYMid meet">${paths}</svg>
        <div style="display:flex;align-items:center;gap:8px;margin-top:6px;font-size:11px;color:var(--mut)"><span>menos</span><div style="flex:1;height:10px;border-radius:5px;background:linear-gradient(90deg,${heatColor(0)},${heatColor(0.5)},${heatColor(1)})"></div><span>más 🔥</span></div></div>
      <div class="card"><h3>Ranking de zonas</h3>
-       <table><thead><tr><th>#</th><th>Departamento</th><th class="num">${isG?'Crec.':metricLbl}</th><th></th></tr></thead><tbody>`+
+       <table><thead><tr><th>#</th><th>Departamento</th><th class="num">${colLbl}</th><th></th></tr></thead><tbody>`+
        rank.map((r,i)=>`<tr class="click" data-d="${r.d}"><td>${i+1}</td><td>${r.d}</td><td class="num" style="color:#fff;font-weight:700">${fmtVal(r.v)}</td><td style="width:30%"><div class="bar" style="width:${Math.max(2,Math.abs(r.v)/maxr*100)}%;background:${heatColor(norm(r.v))}"></div></td></tr>`).join('')+
        `</tbody></table></div>
    </div>
@@ -156,6 +158,10 @@ async function renderPanorama(){
 /* ===== EN VIVO (depto) ===== */
 function renderLive(){
   const P=L();const sc=scope(focus);
+  const totPob=Object.values(DS.poblacion||{}).reduce((a,b)=>a+b,0);
+  const pob=focus===PAIS?totPob:(DS.poblacion||{})[focus]||0;
+  const percap=pob?sc.total/pob*10000:0;
+  const paisPercap=totPob?P.total_pais/totPob*10000:0;
   const leader=Object.entries(sc.marcas)[0]||['—',0];
   // concentracion local
   const shares=Object.values(sc.marcas).map(v=>v/sc.total);
@@ -169,6 +175,7 @@ function renderLive(){
      <div class="card kpi hl"><div class="big">${fmt(sc.total)}</div><div class="lbl">Motos · ${fname(focus)} · ${DS.latest}</div></div>
      <div class="card kpi"><div class="big" style="color:${COL[leader[0]]||SEGCOL[segOf(leader[0])]}">${leader[0]}</div><div class="lbl">Líder local · ${pct(leader[1],sc.total).toFixed(0)}% (${fmt(leader[1])} u)</div></div>
      <div class="card kpi"><div class="big">${pct(sc.total,P.total_pais).toFixed(1)}%</div><div class="lbl">Peso en el país</div></div>
+     <div class="card kpi"><div class="big">${percap.toFixed(1)}</div><div class="lbl">Motos por 10.000 hab.${pob?(percap>=paisPercap?' <span class="up">▲ más que el país</span>':' <span class="down">▼ menos que el país</span>'):''}</div></div>
      <div class="card kpi"><div class="big">${Object.keys(sc.marcas).length}</div><div class="lbl">Marcas compitiendo acá</div></div>
    </div>
    <div class="grid two" style="margin-top:14px">

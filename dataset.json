@@ -100,6 +100,27 @@
       "E-MOTO"
     ]
   },
+  "poblacion": {
+    "Montevideo": 1302950,
+    "Canelones": 608960,
+    "Maldonado": 212954,
+    "Salto": 136195,
+    "Colonia": 135797,
+    "Paysandú": 121838,
+    "Soriano": 83684,
+    "Cerro Largo": 91021,
+    "Rocha": 80710,
+    "Tacuarembó": 96016,
+    "San José": 119718,
+    "Durazno": 62010,
+    "Artigas": 77488,
+    "Río Negro": 57338,
+    "Florida": 70324,
+    "Rivera": 109299,
+    "Treinta y Tres": 47705,
+    "Lavalleja": 59173,
+    "Flores": 26271
+  },
   "periods": [
     "2026-05"
   ],

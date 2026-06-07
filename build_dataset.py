@@ -9,6 +9,15 @@ DATA = os.path.join(BASE, "data")
 DEFAULT_FOCUS = "Soriano"
 TRACK = ["YUMBO", "BACCIO", "ZANELLA"]
 
+# Poblacion por departamento - Censo 2023 (INE Uruguay)
+POBLACION = {
+ "Montevideo":1302950,"Canelones":608960,"Maldonado":212954,"Salto":136195,
+ "Colonia":135797,"Paysandú":121838,"Soriano":83684,"Cerro Largo":91021,
+ "Rocha":80710,"Tacuarembó":96016,"San José":119718,"Durazno":62010,
+ "Artigas":77488,"Río Negro":57338,"Florida":70324,"Rivera":109299,
+ "Treinta y Tres":47705,"Lavalleja":59173,"Flores":26271,
+}
+
 # Segmentacion del mercado moto uruguayo (estimada por marca)
 SEG = {
  "economica": ["YUMBO","BACCIO","ZANELLA","VITAL","KIOTO","LIFAN","LONCIN","GILERA","WINNER",
@@ -74,7 +83,7 @@ def main():
     plist = list(by_period.keys())
     dataset = {
         "default_focus": DEFAULT_FOCUS, "deptos": sorted(all_deptos),
-        "track": TRACK, "segments": SEG,
+        "track": TRACK, "segments": SEG, "poblacion": POBLACION,
         "periods": plist, "latest": plist[-1] if plist else None,
         "prev": plist[-2] if len(plist) > 1 else None,
         "by_period": by_period,
