@@ -42,6 +42,8 @@
   tr.click{cursor:pointer}tr.click:hover td{background:#1a2740}tr.focus td{background:#16335e}
   .bar{height:8px;border-radius:4px;background:var(--azul);min-width:2px}
   .pill{display:inline-block;padding:1px 7px;border-radius:20px;font-size:10px;font-weight:700}
+  .chip{display:inline-flex;align-items:center;gap:4px;padding:5px 11px;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;border:1px solid var(--line)}
+  .chip:hover{filter:brightness(1.2)}
   .gold{background:#f59e0b22;color:#fbbf24}.slv{background:#94a3b822;color:#cbd5e1}.brz{background:#b4530922;color:#f0975a}
   .seg-eco{background:#22c55e22;color:#4ade80}.seg-media{background:#2f86ff22;color:#60a5fa}
   .seg-premium{background:#a855f722;color:#c084fc}.seg-electrica{background:#06b6d422;color:#22d3ee}.seg-otras{background:#64748b22;color:#94a3b8}
@@ -89,7 +91,7 @@ const SEGLBL={economica:'Económica',media:'Media',premium:'Premium',electrica:'
 const PAIS='__PAIS__';
 const fmt=n=>Math.round(n).toLocaleString('es-UY');
 const pct=(a,b)=>b?(a/b*100):0;
-let DS=null,charts=[],focus='Soriano',marca='YUMBO',deptoSort='total';
+let DS=null,charts=[],focus='Soriano',marca='YUMBO',deptoSort='total',marcasSel=['YUMBO'];
 function medal(i){return i==0?'<span class="pill gold">🥇</span>':i==1?'<span class="pill slv">🥈</span>':i==2?'<span class="pill brz">🥉</span>':'';}
 function segBadge(s){return `<span class="pill seg-${s}">${SEGLBL[s]||s}</span>`;}
 function destroyCharts(){charts.forEach(c=>c.destroy());charts=[];}
@@ -206,8 +208,19 @@ function renderLive(){
   doughSeg('segPais',segSplit(P.nac_marcas));
 }
 
-/* ===== ANÁLISIS DE MARCA ===== */
+/* ===== ANÁLISIS DE MARCA (1 marca = analisis; 2+ = comparativa) ===== */
 function renderMarca(){
+  const all=Object.keys(L().nac_marcas);
+  marcasSel=marcasSel.filter(m=>all.includes(m)); if(!marcasSel.length)marcasSel=[all[0]];
+  const chips=marcasSel.map(m=>`<span class="chip" style="background:${(COL[m]||SEGCOL[segOf(m)])}22;color:${COL[m]||'#cbd5e1'}" data-rm="${m}">${m}${marcasSel.length>1?' ✕':''}</span>`).join('');
+  const addOpts=`<option value="">＋ agregar modelo…</option>`+all.filter(m=>!marcasSel.includes(m)).map(m=>`<option value="${m}">${m}</option>`).join('');
+  const ctrl=`<div class="row" style="margin-bottom:14px;align-items:center;gap:8px"><span class="tag">🏍️ Modelos a analizar:</span>${chips}<select id="addMarca">${addOpts}</select></div>`;
+  if(marcasSel.length===1){ marca=marcasSel[0]; renderMarcaSingle(ctrl); }
+  else { renderMarcaCompare(marcasSel.slice(), ctrl); }
+  const am=document.getElementById('addMarca'); if(am)am.onchange=e=>{const v=e.target.value; if(v&&!marcasSel.includes(v)){marcasSel.push(v);renderMarca();}};
+  document.querySelectorAll('#view-marca [data-rm]').forEach(c=>c.onclick=()=>{ if(marcasSel.length>1){ marcasSel=marcasSel.filter(x=>x!==c.dataset.rm); renderMarca(); }});
+}
+function renderMarcaSingle(ctrl){
   const P=L();const bs=P.brand_stats[marca];
   if(!bs){document.getElementById('view-marca').innerHTML='<div class="card">Sin datos para esta marca.</div>';return;}
   const rankNac=Object.keys(P.nac_marcas).indexOf(marca)+1;
@@ -218,8 +231,8 @@ function renderMarca(){
   const strong=rows.filter(r=>r.ifl>=1.3);
   const lectura=r=>r.u===0?'<span class="ifl-lo">Ausente</span>':r.ifl>=1.3?'<span class="ifl-hi">Fuerte</span>':r.ifl<=0.7?'<span class="ifl-lo">Débil</span>':'<span class="ifl-mid">Normal</span>';
   document.getElementById('view-marca').innerHTML=`
-   <div class="row" style="margin-bottom:12px;align-items:center"><span class="tag">🏍️ Elegí la marca:</span><select id="mSel">${marcaOptions(marca)}</select></div>
-   <div class="help">🏍️ <b>Todo sobre ${marca}.</b> Cuánto vende en el país, dónde es fuerte y en qué zonas tiene lugar para crecer.</div>
+   ${ctrl}
+   <div class="help">🏍️ <b>Todo sobre ${marca}.</b> Cuánto vende en el país, dónde es fuerte y en qué zonas tiene lugar para crecer. Agregá otra marca arriba para comparar.</div>
    <div class="grid kpis">
      <div class="card kpi hl"><div class="big" style="color:${COL[marca]||SEGCOL[bs.seg]}">${marca}</div><div class="lbl">${segBadge(bs.seg)} · ${DS.latest}</div></div>
      <div class="card kpi"><div class="big">${fmt(bs.total)}</div><div class="lbl">Motos en el país (${bs.share}% del total)</div></div>
@@ -242,12 +255,38 @@ function renderMarca(){
      <table><thead><tr><th>Departamento</th><th class="num">Unidades</th><th class="num">% local</th><th class="num">Fuerza</th><th>Lectura</th></tr></thead><tbody>`+
      rows.map(r=>`<tr><td>${r.d}</td><td class="num" style="color:#fff">${fmt(r.u)}</td><td class="num">${r.sh.toFixed(1)}%</td><td class="num">${iflCell(r.ifl)}</td><td>${lectura(r)}</td></tr>`).join('')+`</tbody></table></div>
    <div class="note">${DS.nota}</div>`;
-  document.getElementById('mSel').onchange=e=>{marca=e.target.value;renderMarca();};
   destroyCharts();
   const top=rows.slice(0,12);
   charts.push(new Chart(mBar,{type:'bar',data:{labels:top.map(r=>r.d),datasets:[{data:top.map(r=>r.u),backgroundColor:COL[marca]||SEGCOL[bs.seg],borderRadius:4}]},options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#8a9bb5'},grid:{color:'#22304a'}},y:{ticks:{color:'#8a9bb5',font:{size:11}},grid:{display:false}}}}}));
   const ir=rows.filter(r=>r.u>0).sort((a,b)=>b.ifl-a.ifl);
   charts.push(new Chart(mIfl,{type:'bar',data:{labels:ir.map(r=>r.d),datasets:[{data:ir.map(r=>r.ifl),backgroundColor:ir.map(r=>r.ifl>=1.3?'#22c55e':r.ifl<=0.7?'#ef4444':'#64748b'),borderRadius:4}]},options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#8a9bb5'},grid:{color:'#22304a'}},y:{ticks:{color:'#8a9bb5',font:{size:11}},grid:{display:false}}}}}));
+}
+function renderMarcaCompare(list,ctrl){
+  const P=L();const deps=DS.deptos;const colorOf=m=>COL[m]||SEGCOL[segOf(m)];
+  const data=list.map(m=>{const bs=P.brand_stats[m]||{total:0,share:0,n_deptos:0,seg:'otras'};const rank=Object.keys(P.nac_marcas).indexOf(m)+1;return{m,bs,rank};});
+  const wins={};list.forEach(m=>wins[m]=0);
+  deps.forEach(d=>{const o=P.deptos[d]||{marcas:{}};let best=null;list.forEach(m=>{const u=o.marcas[m]||0;if(best===null||u>best.u)best={m,u};});if(best&&best.u>0)wins[best.m]++;});
+  document.getElementById('view-marca').innerHTML=`
+   ${ctrl}
+   <div class="help">⚔️ <b>Comparando ${list.length} modelos.</b> Cuál vende más en el país, en cuántas zonas gana cada uno, y el cara a cara por departamento.</div>
+   <div class="grid kpis">`+
+     data.slice().sort((a,b)=>b.bs.total-a.bs.total).map((x,i)=>`<div class="card kpi${i===0?' hl':''}"><div class="big" style="color:${colorOf(x.m)}">${x.m}</div><div class="lbl">${fmt(x.bs.total)} motos · ${x.bs.share}% país · gana en ${wins[x.m]} zonas</div></div>`).join('')+
+   `</div>
+   <div class="grid two" style="margin-top:14px">
+     <div class="card"><h3>Motos en el país (mes)</h3><div class="chartbox"><canvas id="cmpBar"></canvas></div></div>
+     <div class="card"><h3>Resumen</h3>
+       <table><thead><tr><th>Modelo</th><th class="num">País</th><th class="num">Share</th><th class="num">Puesto</th><th class="num">Zonas gana</th></tr></thead><tbody>`+
+       data.sort((a,b)=>b.bs.total-a.bs.total).map(x=>`<tr><td>${segBadge(x.bs.seg)} <b style="color:${colorOf(x.m)}">${x.m}</b></td><td class="num" style="color:#fff;font-weight:700">${fmt(x.bs.total)}</td><td class="num">${x.bs.share}%</td><td class="num">#${x.rank}</td><td class="num">${wins[x.m]}/19</td></tr>`).join('')+
+       `</tbody></table></div>
+   </div>
+   <div class="card" style="margin-top:14px"><h3>Cara a cara por departamento — quién vende más en cada zona</h3>
+     <div style="overflow-x:auto"><table><thead><tr><th>Departamento</th><th class="num">Mercado</th>${list.map(m=>`<th class="num" style="color:${colorOf(m)}">${m}</th>`).join('')}<th>Gana</th></tr></thead><tbody>`+
+     deps.map(d=>{const o=P.deptos[d]||{total:0,marcas:{}};const vals=list.map(m=>({m,u:o.marcas[m]||0}));const win=vals.slice().sort((a,b)=>b.u-a.u)[0];return `<tr><td>${d}</td><td class="num">${fmt(o.total)}</td>${vals.map(v=>`<td class="num" style="${v.m===win.m&&win.u>0?'color:#fff;font-weight:700':'color:var(--mut)'}">${fmt(v.u)}</td>`).join('')}<td>${win.u>0?`<span style="color:${colorOf(win.m)};font-weight:700">${win.m}</span>`:'—'}</td></tr>`;}).join('')+
+     `</tbody></table></div></div>
+   <div class="note">${DS.nota}</div>`;
+  destroyCharts();
+  const sorted=data.slice().sort((a,b)=>b.bs.total-a.bs.total);
+  charts.push(new Chart(cmpBar,{type:'bar',data:{labels:sorted.map(x=>x.m),datasets:[{data:sorted.map(x=>x.bs.total),backgroundColor:sorted.map(x=>colorOf(x.m)),borderRadius:4}]},options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#8a9bb5'},grid:{color:'#22304a'}},y:{ticks:{color:'#8a9bb5'},grid:{display:false}}}}}));
 }
 
 /* ===== HISTÓRICO ===== */
