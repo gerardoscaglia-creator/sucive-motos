@@ -21,6 +21,8 @@
   input{background:#0f1726;border:1px solid var(--line);color:var(--txt);padding:9px 12px;border-radius:10px;font-size:14px;outline:none}
   input:focus{border-color:var(--azul)}
   .btn{background:var(--azul);color:#fff;border:0;padding:10px 18px;border-radius:10px;font-weight:700;cursor:pointer;font-size:14px}
+  a.btn{text-decoration:none;display:inline-block}
+  .upd{background:var(--ok)}.upd:hover{filter:brightness(1.08)}
   .field{display:flex;flex-direction:column;gap:4px}.row{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
   .delx{cursor:pointer;color:#f87171;font-weight:700}
   .periodo{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:13px;color:var(--mut)}
@@ -69,6 +71,9 @@
       <div class="sub">Datos oficiales de SUCIVE · 19 departamentos</div></div></div>
   <div class="controls">
     <div class="periodo">Mes: <b id="latestLbl">—</b></div>
+    <a class="btn upd" href="https://github.com/gerardoscaglia-creator/sucive-motos/actions/workflows/monthly.yml"
+       target="_blank" rel="noopener"
+       title="Abre GitHub Actions. Tocá 'Run workflow' para bajar el último dato de SUCIVE ahora, sin esperar al día 5.">🔄 Actualizar ahora</a>
   </div>
 </header>
 <div class="tabs">
