@@ -1,10 +1,13 @@
 name: Scrape SUCIVE mensual
 
-# Corre automatico el dia 5 de cada mes (13:00 UTC ~10:00 Uruguay)
-# y tambien se puede disparar a mano desde la pestana Actions.
+# Corre automatico TODOS LOS DIAS a las 13:00 UTC (~10:00 Uruguay).
+# capture.py es idempotente: si SUCIVE no publico un mes nuevo, no commitea nada.
+# Asi, apenas SUCIVE publica el mes, en menos de 24h la web queda al dia sola,
+# sin esperar a una fecha fija. Repo publico => Actions gratis e ilimitado.
+# Tambien se dispara a mano desde la pestana Actions (boton "Run workflow").
 on:
   schedule:
-    - cron: '0 13 5 * *'
+    - cron: '0 13 * * *'
   workflow_dispatch:
 
 permissions:
