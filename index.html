@@ -37,6 +37,13 @@
   .card h3{font-size:12px;color:var(--mut);font-weight:600;margin-bottom:12px;text-transform:uppercase;letter-spacing:.4px}
   .kpi .big{font-size:30px;font-weight:800;line-height:1}.kpi .lbl{color:var(--mut);font-size:12px;margin-top:6px}
   .kpi .chg{font-size:12px;margin-top:6px;font-weight:600}.up{color:var(--ok)}.down{color:var(--bad)}
+  .chg{font-size:12px;font-weight:700}
+  .evo{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:15px 20px;border-radius:14px;margin:0 0 14px}
+  .evo-up{background:linear-gradient(90deg,#22c55e22,transparent);border:1px solid #22c55e55;border-left:5px solid var(--ok)}
+  .evo-down{background:linear-gradient(90deg,#ef444422,transparent);border:1px solid #ef444455;border-left:5px solid var(--bad)}
+  .evo-ico{font-size:40px;line-height:1}.evo-big{font-size:22px;font-weight:800;line-height:1.15}
+  .evo-up .evo-big{color:#4ade80}.evo-down .evo-big{color:#f87171}
+  .evo-sub{color:var(--mut);font-size:13px;margin-top:4px}.evo-sub b{color:var(--txt)}
   table{width:100%;border-collapse:collapse;font-size:13.5px}
   th,td{text-align:left;padding:7px 6px;border-bottom:1px solid var(--line)}
   th{color:var(--mut);font-weight:600;font-size:11px;text-transform:uppercase;cursor:pointer}
@@ -109,10 +116,30 @@ function segOf(mk){const bs=L().brand_stats[mk];return bs?bs.seg:'otras';}
 function iflVal(mk,depto){const sc=scope(depto);const local=pct(sc.marcas[mk]||0,sc.total);const nac=L().brand_stats[mk]?L().brand_stats[mk].share:0;return nac?local/nac:0;}
 function iflCell(v){if(!v)return '<span class="ifl-mid">—</span>';const c=v>=1.3?'ifl-hi':v<=0.7?'ifl-lo':'ifl-mid';return `<span class="${c}">${v.toFixed(2)}×</span>`;}
 
-function rankTable(marcas,total,withSeg){
-  const ents=Object.entries(marcas);const max=ents[0]?ents[0][1]:1;
-  return `<table><thead><tr><th>Marca</th>${withSeg?'<th>Segm.</th>':''}<th class="num">Unid.</th><th class="num">Share</th><th></th></tr></thead><tbody>`+
-   ents.slice(0,14).map(([m,v],i)=>`<tr><td>${medal(i)} ${m}</td>${withSeg?`<td>${segBadge(segOf(m))}</td>`:''}<td class="num">${fmt(v)}</td><td class="num">${pct(v,total).toFixed(1)}%</td><td style="width:24%"><div class="bar" style="width:${v/max*100}%;background:${COL[m]||SEGCOL[segOf(m)]}"></div></td></tr>`).join('')+`</tbody></table>`;
+/* ===== COMPARACIÓN / EVOLUCIÓN (vs mes anterior / otro mes / mismo mes año pasado) ===== */
+let cmpMode='prev'; // 'prev' | 'year' | 'YYYY-MM'
+function bp(p){return DS.by_period[p];}
+function periodsBefore(p){return DS.periods.filter(x=>x<p);}
+function yearAgo(p){const a=p.split('-');const t=(parseInt(a[0])-1)+'-'+a[1];return DS.periods.includes(t)?t:null;}
+function cmpPeriod(){const lat=DS.latest;if(cmpMode==='prev')return DS.prev;if(cmpMode==='year')return yearAgo(lat);return (cmpMode!==lat&&DS.periods.includes(cmpMode))?cmpMode:DS.prev;}
+function cmpLabel(){return cmpPeriod()||'—';}
+function totOf(per,f){const P=bp(per);if(!P)return null;return f===PAIS?P.total_pais:((P.deptos[f]||{}).total||0);}
+function mkOf(per,f,m){const P=bp(per);if(!P)return null;const src=f===PAIS?P.nac_marcas:((P.deptos[f]||{}).marcas||{});return src[m]||0;}
+function delta(cur,base){if(base==null||base===0)return null;return{abs:cur-base,pct:(cur-base)/base*100};}
+function chgHTML(cur,base,opt){opt=opt||{};const d=delta(cur,base);if(d==null)return '';const up=d.abs>=0,cls=up?'up':'down',ar=up?'▲':'▼',s=up?'+':'';return `<div class="chg ${cls}">${ar} ${s}${d.pct.toFixed(0)}%${opt.abs?` <span style="opacity:.75">(${s}${fmt(d.abs)})</span>`:''} <span class="tag" style="font-weight:400">vs ${cmpLabel()}</span></div>`;}
+function chgCell(cur,base){const d=delta(cur,base);if(d==null)return '<td class="num"><span class="tag">—</span></td>';const up=d.abs>=0;return `<td class="num"><span class="${up?'up':'down'}" style="font-weight:700">${up?'▲':'▼'} ${up?'+':''}${d.pct.toFixed(0)}%</span></td>`;}
+function cmpControl(){
+  if(!DS.prev)return '';
+  const opts=[`<option value="prev"${cmpMode==='prev'?' selected':''}>Mes anterior (${DS.prev})</option>`];
+  const ya=yearAgo(DS.latest);if(ya)opts.push(`<option value="year"${cmpMode==='year'?' selected':''}>Mismo mes año pasado (${ya})</option>`);
+  periodsBefore(DS.latest).filter(p=>p!==DS.prev&&p!==yearAgo(DS.latest)).reverse().forEach(p=>opts.push(`<option value="${p}"${cmpMode===p?' selected':''}>${p}</option>`));
+  return `<div class="row" style="margin:0 0 12px;align-items:center;gap:8px"><span class="tag">📊 Comparar <b style="color:var(--txt)">${DS.latest}</b> contra:</span><select id="cmpSel">${opts.join('')}</select></div>`;
+}
+
+function rankTable(marcas,total,withSeg,baseMarcas){
+  const ents=Object.entries(marcas);const max=ents[0]?ents[0][1]:1;const hasB=!!baseMarcas;
+  return `<table><thead><tr><th>Marca</th>${withSeg?'<th>Segm.</th>':''}<th class="num">Unid.</th><th class="num">Share</th>${hasB?`<th class="num">Δ ${cmpLabel()}</th>`:''}<th></th></tr></thead><tbody>`+
+   ents.slice(0,14).map(([m,v],i)=>`<tr><td>${medal(i)} ${m}</td>${withSeg?`<td>${segBadge(segOf(m))}</td>`:''}<td class="num">${fmt(v)}</td><td class="num">${pct(v,total).toFixed(1)}%</td>${hasB?chgCell(v,(baseMarcas[m]||0)):''}<td style="width:${hasB?18:24}%"><div class="bar" style="width:${v/max*100}%;background:${COL[m]||SEGCOL[segOf(m)]}"></div></td></tr>`).join('')+`</tbody></table>`;
 }
 function segSplit(marcas){const t={economica:0,media:0,premium:0,electrica:0,otras:0};for(const[k,v]of Object.entries(marcas))t[segOf(k)]+=v;return t;}
 function doughSeg(id,sp){charts.push(new Chart(document.getElementById(id),{type:'doughnut',data:{labels:Object.keys(sp).map(k=>SEGLBL[k]),datasets:[{data:Object.values(sp),backgroundColor:Object.keys(sp).map(k=>SEGCOL[k]),borderWidth:0}]},options:{plugins:{legend:{position:'bottom',labels:{color:'#8a9bb5',boxWidth:9,font:{size:10}}}},cutout:'58%'}}));}
@@ -136,10 +163,17 @@ async function renderPanorama(){
   const metricLbl=baseLbl+(perHab?' · por 10.000 hab':'');
   const colLbl=isG?'Crec.':perHab?'x10.000 hab':mapaMetric==='marca'?marca:'Motos';
   const btn=(m,lbl)=>`<div class="tab ${mapaMetric===m?'active':''}" style="padding:6px 11px;font-size:13px" onclick="setMapaMetric('${m}')">${lbl}</div>`;
+  const evBase=totOf(cmpPeriod(),PAIS), ev=delta(P.total_pais,evBase);
+  const evBanner=ev?`<div class="evo ${ev.abs>=0?'evo-up':'evo-down'}">
+     <div class="evo-ico">${ev.abs>=0?'📈':'📉'}</div>
+     <div><div class="evo-big">Las ventas de motos ${ev.abs>=0?'SUBIERON':'BAJARON'} ${Math.abs(ev.pct).toFixed(1)}%</div>
+       <div class="evo-sub">${DS.latest} vs ${cmpLabel()} · de <b>${fmt(evBase)}</b> a <b>${fmt(P.total_pais)}</b> motos <b>(${ev.abs>=0?'+':''}${fmt(ev.abs)})</b></div></div>
+   </div>`:'';
   document.getElementById('view-panorama').innerHTML=`
    <div class="help">🔥 <b>Dónde se venden más motos en Uruguay.</b> El mapa pinta de rojo las zonas más calientes. Tocá un departamento (en el mapa o en la lista) para ver su detalle.</div>
+   ${cmpControl()}${evBanner}
    <div class="grid kpis">
-     <div class="card kpi"><div class="big">${fmt(P.total_pais)}</div><div class="lbl">Motos en todo el país · ${DS.latest}</div></div>
+     <div class="card kpi"><div class="big">${fmt(P.total_pais)}</div><div class="lbl">Motos en todo el país · ${DS.latest}</div>${chgHTML(P.total_pais,evBase,{abs:1})}</div>
      <div class="card kpi"><div class="big" style="color:var(--azul)">${rank[0]?rank[0].d:'—'}</div><div class="lbl">Zona más caliente</div></div>
      <div class="card kpi"><div class="big">${P.n_marcas}</div><div class="lbl">Marcas a la venta</div></div>
      <div class="card kpi"><div class="big">${P.top3_share}%</div><div class="lbl">Lo acaparan las 3 marcas top</div></div>
@@ -155,8 +189,8 @@ async function renderPanorama(){
        `</tbody></table></div>
    </div>
    <div class="card" style="margin-top:14px"><h3>Detalle por departamento — tocá uno para ver más</h3>
-     <table><thead><tr><th data-s="nombre">Departamento</th><th class="num" data-s="total">Motos</th><th class="num">% del país</th><th>Marca que más vende</th><th></th></tr></thead><tbody>`+
-     arr.map(a=>`<tr class="click ${a.d===focus?'focus':''}" data-d="${a.d}"><td>${a.d}</td><td class="num" style="color:#fff;font-weight:700">${fmt(a.total)}</td><td class="num">${pct(a.total,P.total_pais).toFixed(1)}%</td><td><span style="color:${COL[a.top]||SEGCOL[segOf(a.top)]};font-weight:600">${a.top}</span> <span class="tag">${fmt(a.topv)}</span></td><td style="width:20%"><div class="bar" style="width:${a.total/maxtot*100}%"></div></td></tr>`).join('')+
+     <table><thead><tr><th data-s="nombre">Departamento</th><th class="num" data-s="total">Motos</th><th class="num">Δ ${cmpLabel()}</th><th class="num">% del país</th><th>Marca que más vende</th><th></th></tr></thead><tbody>`+
+     arr.map(a=>`<tr class="click ${a.d===focus?'focus':''}" data-d="${a.d}"><td>${a.d}</td><td class="num" style="color:#fff;font-weight:700">${fmt(a.total)}</td>${chgCell(a.total,totOf(cmpPeriod(),a.d))}<td class="num">${pct(a.total,P.total_pais).toFixed(1)}%</td><td><span style="color:${COL[a.top]||SEGCOL[segOf(a.top)]};font-weight:600">${a.top}</span> <span class="tag">${fmt(a.topv)}</span></td><td style="width:20%"><div class="bar" style="width:${a.total/maxtot*100}%"></div></td></tr>`).join('')+
      `</tbody></table></div>
    <div class="note">${DS.nota}</div>`;
   destroyCharts();
@@ -179,18 +213,22 @@ function renderLive(){
   const top3L=(shares.slice(0,3).reduce((a,b)=>a+b,0)*100).toFixed(1);
   // IFL tabla: marcas top del depto con su fuerza local
   const iflRows=Object.entries(sc.marcas).slice(0,12).map(([m,v])=>{const ifl=iflVal(m,focus);return{m,v,sh:pct(v,sc.total),ifl,seg:segOf(m)};});
+  const cb=cmpPeriod(), evBaseL=totOf(cb,focus), evL=delta(sc.total,evBaseL);
+  const bMarcas=cb?(focus===PAIS?bp(cb).nac_marcas:((bp(cb).deptos[focus]||{}).marcas||{})):null;
+  const evBannerL=evL?`<div class="evo ${evL.abs>=0?'evo-up':'evo-down'}"><div class="evo-ico">${evL.abs>=0?'📈':'📉'}</div><div><div class="evo-big">En ${fname(focus)} las ventas ${evL.abs>=0?'SUBIERON':'BAJARON'} ${Math.abs(evL.pct).toFixed(1)}%</div><div class="evo-sub">${DS.latest} vs ${cmpLabel()} · de <b>${fmt(evBaseL)}</b> a <b>${fmt(sc.total)}</b> motos <b>(${evL.abs>=0?'+':''}${fmt(evL.abs)})</b></div></div></div>`:'';
   document.getElementById('view-live').innerHTML=`
    <div class="row" style="margin-bottom:12px;align-items:center"><span class="tag">📍 Elegí la zona:</span><select id="zonaSel">${deptoOptions(focus)}</select></div>
    <div class="help">📍 <b>Cómo está el mercado en ${fname(focus)}.</b> Qué marcas se venden más acá y cuáles pegan más fuerte que en el resto del país.</div>
+   ${cmpControl()}${evBannerL}
    <div class="grid kpis">
-     <div class="card kpi hl"><div class="big">${fmt(sc.total)}</div><div class="lbl">Motos · ${fname(focus)} · ${DS.latest}</div></div>
+     <div class="card kpi hl"><div class="big">${fmt(sc.total)}</div><div class="lbl">Motos · ${fname(focus)} · ${DS.latest}</div>${chgHTML(sc.total,evBaseL,{abs:1})}</div>
      <div class="card kpi"><div class="big" style="color:${COL[leader[0]]||SEGCOL[segOf(leader[0])]}">${leader[0]}</div><div class="lbl">Líder local · ${pct(leader[1],sc.total).toFixed(0)}% (${fmt(leader[1])} u)</div></div>
      <div class="card kpi"><div class="big">${pct(sc.total,P.total_pais).toFixed(1)}%</div><div class="lbl">Peso en el país</div></div>
      <div class="card kpi"><div class="big">${percap.toFixed(1)}</div><div class="lbl">Motos por 10.000 hab.${pob?(percap>=paisPercap?' <span class="up">▲ más que el país</span>':' <span class="down">▼ menos que el país</span>'):''}</div></div>
      <div class="card kpi"><div class="big">${Object.keys(sc.marcas).length}</div><div class="lbl">Marcas compitiendo acá</div></div>
    </div>
    <div class="grid two" style="margin-top:14px">
-     <div class="card"><h3>Ranking de marcas · ${fname(focus)}</h3>${rankTable(sc.marcas,sc.total,true)}</div>
+     <div class="card"><h3>Ranking de marcas · ${fname(focus)}</h3>${rankTable(sc.marcas,sc.total,true,bMarcas)}</div>
      <div>
        <div class="card"><h3>Fuerza local — qué marcas pegan más fuerte acá que en el resto del país</h3>
          <table><thead><tr><th>Marca</th><th class="num">% acá</th><th class="num">% país</th><th class="num">Fuerza</th></tr></thead><tbody>`+
@@ -237,12 +275,15 @@ function renderMarcaSingle(ctrl){
   const opp=rows.filter(r=>r.u===0||(r.u>0&&r.ifl<0.7)).sort((a,b)=>b.tot-a.tot); // mercados grandes donde la marca es debil o ausente = oportunidad
   const strong=rows.filter(r=>r.ifl>=1.3);
   const lectura=r=>r.u===0?'<span class="ifl-lo">Ausente</span>':r.ifl>=1.3?'<span class="ifl-hi">Fuerte</span>':r.ifl<=0.7?'<span class="ifl-lo">Débil</span>':'<span class="ifl-mid">Normal</span>';
+  const cbM=cmpPeriod(), evBaseM=mkOf(cbM,PAIS,marca), evM=delta(bs.total,evBaseM);
+  const evBannerM=evM?`<div class="evo ${evM.abs>=0?'evo-up':'evo-down'}"><div class="evo-ico">${evM.abs>=0?'📈':'📉'}</div><div><div class="evo-big">${marca} ${evM.abs>=0?'SUBIÓ':'BAJÓ'} ${Math.abs(evM.pct).toFixed(1)}% en el país</div><div class="evo-sub">${DS.latest} vs ${cmpLabel()} · de <b>${fmt(evBaseM)}</b> a <b>${fmt(bs.total)}</b> motos <b>(${evM.abs>=0?'+':''}${fmt(evM.abs)})</b></div></div></div>`:'';
   document.getElementById('view-marca').innerHTML=`
    ${ctrl}
    <div class="help">🏍️ <b>Todo sobre ${marca}.</b> Cuánto vende en el país, dónde es fuerte y en qué zonas tiene lugar para crecer. Agregá otra marca arriba para comparar.</div>
+   ${cmpControl()}${evBannerM}
    <div class="grid kpis">
      <div class="card kpi hl"><div class="big" style="color:${COL[marca]||SEGCOL[bs.seg]}">${marca}</div><div class="lbl">${segBadge(bs.seg)} · ${DS.latest}</div></div>
-     <div class="card kpi"><div class="big">${fmt(bs.total)}</div><div class="lbl">Motos en el país (${bs.share}% del total)</div></div>
+     <div class="card kpi"><div class="big">${fmt(bs.total)}</div><div class="lbl">Motos en el país (${bs.share}% del total)</div>${chgHTML(bs.total,evBaseM,{abs:1})}</div>
      <div class="card kpi"><div class="big">#${rankNac}</div><div class="lbl">Puesto en el país (de ${P.n_marcas} marcas)</div></div>
      <div class="card kpi"><div class="big">${bs.n_deptos}/19</div><div class="lbl">Se vende en ${bs.n_deptos} de 19 deptos</div></div>
    </div>
@@ -259,8 +300,8 @@ function renderMarcaSingle(ctrl){
        strong.sort((a,b)=>b.ifl-a.ifl).slice(0,8).map(r=>`<tr><td>${r.d}</td><td class="num">${fmt(r.u)}</td><td class="num">${r.sh.toFixed(1)}%</td><td class="num">${iflCell(r.ifl)}</td></tr>`).join('')+`</tbody></table>`:'<div class="insight">Sin plazas de sobreíndice este mes.</div>')+`</div>
    </div>
    <div class="card" style="margin-top:14px"><h3>Detalle por departamento</h3>
-     <table><thead><tr><th>Departamento</th><th class="num">Unidades</th><th class="num">% local</th><th class="num">Fuerza</th><th>Lectura</th></tr></thead><tbody>`+
-     rows.map(r=>`<tr><td>${r.d}</td><td class="num" style="color:#fff">${fmt(r.u)}</td><td class="num">${r.sh.toFixed(1)}%</td><td class="num">${iflCell(r.ifl)}</td><td>${lectura(r)}</td></tr>`).join('')+`</tbody></table></div>
+     <table><thead><tr><th>Departamento</th><th class="num">Unidades</th><th class="num">Δ ${cmpLabel()}</th><th class="num">% local</th><th class="num">Fuerza</th><th>Lectura</th></tr></thead><tbody>`+
+     rows.map(r=>`<tr><td>${r.d}</td><td class="num" style="color:#fff">${fmt(r.u)}</td>${chgCell(r.u,mkOf(cbM,r.d,marca))}<td class="num">${r.sh.toFixed(1)}%</td><td class="num">${iflCell(r.ifl)}</td><td>${lectura(r)}</td></tr>`).join('')+`</tbody></table></div>
    <div class="note">${DS.nota}</div>`;
   destroyCharts();
   const top=rows.slice(0,12);
@@ -282,8 +323,8 @@ function renderMarcaCompare(list,ctrl){
    <div class="grid two" style="margin-top:14px">
      <div class="card"><h3>Motos en el país (mes)</h3><div class="chartbox"><canvas id="cmpBar"></canvas></div></div>
      <div class="card"><h3>Resumen</h3>
-       <table><thead><tr><th>Modelo</th><th class="num">País</th><th class="num">Share</th><th class="num">Puesto</th><th class="num">Zonas gana</th></tr></thead><tbody>`+
-       data.sort((a,b)=>b.bs.total-a.bs.total).map(x=>`<tr><td>${segBadge(x.bs.seg)} <b style="color:${colorOf(x.m)}">${x.m}</b></td><td class="num" style="color:#fff;font-weight:700">${fmt(x.bs.total)}</td><td class="num">${x.bs.share}%</td><td class="num">#${x.rank}</td><td class="num">${wins[x.m]}/19</td></tr>`).join('')+
+       <table><thead><tr><th>Modelo</th><th class="num">País</th><th class="num">Δ ${cmpLabel()}</th><th class="num">Share</th><th class="num">Puesto</th><th class="num">Zonas gana</th></tr></thead><tbody>`+
+       data.sort((a,b)=>b.bs.total-a.bs.total).map(x=>`<tr><td>${segBadge(x.bs.seg)} <b style="color:${colorOf(x.m)}">${x.m}</b></td><td class="num" style="color:#fff;font-weight:700">${fmt(x.bs.total)}</td>${chgCell(x.bs.total,mkOf(cmpPeriod(),PAIS,x.m))}<td class="num">${x.bs.share}%</td><td class="num">#${x.rank}</td><td class="num">${wins[x.m]}/19</td></tr>`).join('')+
        `</tbody></table></div>
    </div>
    <div class="card" style="margin-top:14px"><h3>Cara a cara por departamento — quién vende más en cada zona</h3>
@@ -307,13 +348,18 @@ function renderHist(){
       <p class="tag">Próxima actualización automática: principios del mes que viene.</p></div>`;
     return;
   }
-  document.getElementById('view-hist').innerHTML=`
-   <div class="help">📈 <b>Cómo evolucionó el mercado mes a mes en ${fname(focus)}.</b> Qué marcas suben y cuáles bajan. Usá "📍 Ver zona" para cambiar de departamento.</div>
-   <div class="grid two"><div class="card"><h3>Tendencia por marca · ${fname(focus)}</h3><div class="chartbox"><canvas id="hMarca"></canvas></div></div>
-   <div class="card"><h3>Total motos/mes · ${fname(focus)} vs País</h3><div class="chartbox"><canvas id="hTotal"></canvas></div></div></div>
-   <div class="card" style="margin-top:14px"><h3>Evolución del share · ${fname(focus)} (%)</h3><div class="chartbox"><canvas id="hShare"></canvas></div></div>`;
   const mOf=(p,m)=>{const sc=DS.by_period[p];return (focus===PAIS?sc.nac_marcas:(sc.deptos[focus]||{marcas:{}}).marcas)[m]||0;};
   const tOf=p=>focus===PAIS?DS.by_period[p].total_pais:(DS.by_period[p].deptos[focus]||{total:0}).total;
+  const ultimo=delta(tOf(DS.latest),DS.prev?tOf(DS.prev):null);
+  const evoHead=ultimo?`<div class="evo ${ultimo.abs>=0?'evo-up':'evo-down'}"><div class="evo-ico">${ultimo.abs>=0?'📈':'📉'}</div><div><div class="evo-big">${fname(focus)}: las ventas ${ultimo.abs>=0?'SUBIERON':'BAJARON'} ${Math.abs(ultimo.pct).toFixed(1)}% el último mes</div><div class="evo-sub">${DS.latest} vs ${DS.prev} · de <b>${fmt(tOf(DS.prev))}</b> a <b>${fmt(tOf(DS.latest))}</b> motos <b>(${ultimo.abs>=0?'+':''}${fmt(ultimo.abs)})</b></div></div></div>`:'';
+  const evoRows=P.map((p,i)=>{const pv=i>0?P[i-1]:null;const t=tOf(p);return `<tr><td>${p}${p===DS.latest?' <span class="pill gold">actual</span>':''}</td><td class="num" style="color:#fff;font-weight:700">${fmt(t)}</td>${pv?chgCell(t,tOf(pv)):'<td class="num"><span class="tag">—</span></td>'}${DS.track.map(m=>{const u=mOf(p,m),du=pv?delta(u,mOf(pv,m)):null;return `<td class="num">${fmt(u)}${du?` <span class="${du.abs>=0?'up':'down'}" style="font-size:10px">${du.abs>=0?'▲':'▼'}${du.abs>=0?'+':''}${du.pct.toFixed(0)}%</span>`:''}</td>`;}).join('')}</tr>`;}).join('');
+  document.getElementById('view-hist').innerHTML=`
+   <div class="help">📈 <b>Cómo evolucionó el mercado mes a mes en ${fname(focus)}.</b> Qué marcas suben y cuáles bajan. Usá "📍 En tu zona" para cambiar de departamento.</div>
+   ${evoHead}
+   <div class="card"><h3>Variación mes a mes · ${fname(focus)}</h3><div style="overflow-x:auto"><table><thead><tr><th>Mes</th><th class="num">Total motos</th><th class="num">Δ vs mes previo</th>${DS.track.map(m=>`<th class="num" style="color:${COL[m]}">${m}</th>`).join('')}</tr></thead><tbody>${evoRows}</tbody></table></div><div class="legend"><span>▲/▼ = cómo varió ese mes contra el mes anterior. Verde sube, rojo baja.</span></div></div>
+   <div class="grid two" style="margin-top:14px"><div class="card"><h3>Tendencia por marca · ${fname(focus)}</h3><div class="chartbox"><canvas id="hMarca"></canvas></div></div>
+   <div class="card"><h3>Total motos/mes · ${fname(focus)} vs País</h3><div class="chartbox"><canvas id="hTotal"></canvas></div></div></div>
+   <div class="card" style="margin-top:14px"><h3>Evolución del share · ${fname(focus)} (%)</h3><div class="chartbox"><canvas id="hShare"></canvas></div></div>`;
   destroyCharts();
   const ax={scales:{x:{ticks:{color:'#8a9bb5'},grid:{color:'#22304a'}},y:{ticks:{color:'#8a9bb5'},grid:{color:'#22304a'}}},plugins:{legend:{labels:{color:'#e8eef7'}}}};
   charts.push(new Chart(hMarca,{type:'line',data:{labels:P,datasets:DS.track.map(m=>({label:m,data:P.map(p=>mOf(p,m)),borderColor:COL[m],tension:.3,borderWidth:3,pointRadius:5}))},options:ax}));
@@ -435,6 +481,7 @@ async function load(){
   switchView(document.querySelector('.tab.active').dataset.v);
 }
 document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>switchView(t.dataset.v));
+document.addEventListener('change',e=>{if(e.target&&e.target.id==='cmpSel'){cmpMode=e.target.value;switchView(document.querySelector('.tab.active').dataset.v);}});
 load();setInterval(load,300000);
 </script>
 </body>
