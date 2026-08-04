@@ -123,10 +123,11 @@
   },
   "periods": [
     "2026-05",
-    "2026-06"
+    "2026-06",
+    "2026-07"
   ],
-  "latest": "2026-06",
-  "prev": "2026-05",
+  "latest": "2026-07",
+  "prev": "2026-06",
   "by_period": {
     "2026-05": {
       "total_pais": 4950,
@@ -3358,6 +3359,1720 @@
         "otras": 140,
         "media": 457,
         "electrica": 28
+      }
+    },
+    "2026-07": {
+      "total_pais": 5111,
+      "n_marcas": 79,
+      "hhi": 1454,
+      "top3_share": 63.1,
+      "nac_marcas": {
+        "BACCIO": 1169,
+        "ZANELLA": 1100,
+        "YUMBO": 956,
+        "HONDA": 348,
+        "VITAL": 281,
+        "KEEWAY": 207,
+        "YAMAHA": 126,
+        "LIFAN": 116,
+        "BAJAJ": 101,
+        "DIRTY": 75,
+        "KIOTO": 74,
+        "TVS": 61,
+        "CFMOTO": 48,
+        "LONCIN": 46,
+        "ARES": 35,
+        "SUZUKI": 34,
+        "RAVELAND": 22,
+        "TANGO": 19,
+        "ZONTES": 19,
+        "FEROZ": 17,
+        "ZENDA": 16,
+        "KTM": 15,
+        "ROYAL ENFIELD": 15,
+        "VOGE": 15,
+        "TRIKE": 14,
+        "MORBIDELLI": 12,
+        "VELOSOLEX": 12,
+        "HAOJUE": 12,
+        "VINCE": 11,
+        "KOVE": 10,
+        "CFLITE": 9,
+        "E-YUMBO": 9,
+        "ZXMOTO": 9,
+        "KAWASAKI": 7,
+        "RIP COLOR": 7,
+        "XMOTOS": 6,
+        "XAPRIL": 5,
+        "BENELLI": 4,
+        "WINNER": 4,
+        "QJ": 4,
+        "KILAND": 4,
+        "HUSQVARNA": 4,
+        "KYMCO": 3,
+        "BETA": 3,
+        "VMOTO": 3,
+        "GOLDTECH": 2,
+        "HENSIM": 2,
+        "KIWI": 2,
+        "MOTO MORINI": 2,
+        "ESUN": 2,
+        "TITAN": 2,
+        "DARKO": 2,
+        "TORO": 2,
+        "VESPA": 2,
+        "VOLTBIKE": 2,
+        "GREEN PRIDE": 1,
+        "HERO HONDA": 1,
+        "NIU": 1,
+        "VERADO": 1,
+        "YIWO TRADING": 1,
+        "YADEA": 1,
+        "Salto SANYANG": 1,
+        "APRILIA": 1,
+        "BMW": 1,
+        "HARLEY DAVIDSON": 1,
+        "HUSABERG": 1,
+        "MOTORI": 1,
+        "TXM": 1,
+        "DANIOU": 1,
+        "QIANJIANG-QJIANG": 1,
+        "RIMUX": 1,
+        "TRIAL": 1,
+        "BENDA": 1,
+        "CAN AM": 1,
+        "MTR": 1,
+        "RIEJU": 1,
+        "SANYANG": 1,
+        "SUNRA": 1,
+        "WUYANG": 1
+      },
+      "deptos": {
+        "Montevideo": {
+          "total": 1403,
+          "marcas": {
+            "ZANELLA": 356,
+            "YUMBO": 202,
+            "BACCIO": 164,
+            "HONDA": 144,
+            "KEEWAY": 90,
+            "VITAL": 82,
+            "BAJAJ": 54,
+            "YAMAHA": 45,
+            "LIFAN": 28,
+            "LONCIN": 22,
+            "DIRTY": 21,
+            "TVS": 21,
+            "CFMOTO": 19,
+            "KIOTO": 19,
+            "SUZUKI": 15,
+            "ZONTES": 14,
+            "KTM": 12,
+            "ZENDA": 11,
+            "ROYAL ENFIELD": 10,
+            "VOGE": 9,
+            "HAOJUE": 8,
+            "ZXMOTO": 6,
+            "MORBIDELLI": 5,
+            "KOVE": 4,
+            "CFLITE": 3,
+            "RIP COLOR": 3,
+            "VMOTO": 3,
+            "ARES": 2,
+            "BENELLI": 2,
+            "FEROZ": 2,
+            "HUSQVARNA": 2,
+            "KAWASAKI": 2,
+            "QJ": 2,
+            "TORO": 2,
+            "VESPA": 2,
+            "VOLTBIKE": 2,
+            "BENDA": 1,
+            "BETA": 1,
+            "CAN AM": 1,
+            "DARKO": 1,
+            "ESUN": 1,
+            "HENSIM": 1,
+            "KYMCO": 1,
+            "MTR": 1,
+            "RIEJU": 1,
+            "SANYANG": 1,
+            "SUNRA": 1,
+            "TANGO": 1,
+            "TRIKE": 1,
+            "VELOSOLEX": 1,
+            "WUYANG": 1
+          }
+        },
+        "Canelones": {
+          "total": 767,
+          "marcas": {
+            "ZANELLA": 273,
+            "BACCIO": 126,
+            "YUMBO": 101,
+            "VITAL": 67,
+            "KEEWAY": 36,
+            "LIFAN": 25,
+            "BAJAJ": 22,
+            "HONDA": 21,
+            "YAMAHA": 15,
+            "DIRTY": 13,
+            "KIOTO": 8,
+            "TVS": 8,
+            "SUZUKI": 6,
+            "ARES": 5,
+            "CFMOTO": 5,
+            "TRIKE": 4,
+            "CFLITE": 3,
+            "LONCIN": 3,
+            "MORBIDELLI": 3,
+            "ZONTES": 3,
+            "GOLDTECH": 2,
+            "BENELLI": 1,
+            "FEROZ": 1,
+            "GREEN PRIDE": 1,
+            "HENSIM": 1,
+            "HERO HONDA": 1,
+            "KIWI": 1,
+            "KOVE": 1,
+            "KTM": 1,
+            "NIU": 1,
+            "RAVELAND": 1,
+            "ROYAL ENFIELD": 1,
+            "VELOSOLEX": 1,
+            "VERADO": 1,
+            "VINCE": 1,
+            "WINNER": 1,
+            "XMOTOS": 1,
+            "YIWO TRADING": 1,
+            "ZENDA": 1
+          }
+        },
+        "Maldonado": {
+          "total": 402,
+          "marcas": {
+            "BACCIO": 128,
+            "YUMBO": 63,
+            "ZANELLA": 50,
+            "VITAL": 26,
+            "KEEWAY": 20,
+            "BAJAJ": 16,
+            "HONDA": 15,
+            "CFMOTO": 10,
+            "LIFAN": 10,
+            "SUZUKI": 9,
+            "YAMAHA": 7,
+            "LONCIN": 6,
+            "KIOTO": 5,
+            "DIRTY": 4,
+            "TVS": 4,
+            "HAOJUE": 3,
+            "TRIKE": 3,
+            "HUSQVARNA": 2,
+            "KAWASAKI": 2,
+            "VELOSOLEX": 2,
+            "ZONTES": 2,
+            "ARES": 1,
+            "BETA": 1,
+            "BMW": 1,
+            "FEROZ": 1,
+            "HARLEY DAVIDSON": 1,
+            "HUSABERG": 1,
+            "MORBIDELLI": 1,
+            "MOTO MORINI": 1,
+            "MOTORI": 1,
+            "RIP COLOR": 1,
+            "ROYAL ENFIELD": 1,
+            "TITAN": 1,
+            "TXM": 1,
+            "XMOTOS": 1,
+            "ZXMOTO": 1
+          }
+        },
+        "Salto": {
+          "total": 291,
+          "marcas": {
+            "BACCIO": 107,
+            "YUMBO": 69,
+            "ZANELLA": 42,
+            "HONDA": 29,
+            "VITAL": 10,
+            "YAMAHA": 10,
+            "ARES": 7,
+            "LIFAN": 4,
+            "KEEWAY": 3,
+            "DIRTY": 2,
+            "CFLITE": 1,
+            "E-YUMBO": 1,
+            "Salto SANYANG": 1,
+            "SUZUKI": 1,
+            "TANGO": 1,
+            "VOGE": 1,
+            "XMOTOS": 1,
+            "ZXMOTO": 1
+          }
+        },
+        "Colonia": {
+          "total": 245,
+          "marcas": {
+            "BACCIO": 93,
+            "YUMBO": 49,
+            "ZANELLA": 39,
+            "HONDA": 11,
+            "LIFAN": 9,
+            "VITAL": 9,
+            "YAMAHA": 8,
+            "LONCIN": 5,
+            "ARES": 4,
+            "CFMOTO": 3,
+            "RAVELAND": 3,
+            "KEEWAY": 2,
+            "KOVE": 2,
+            "QJ": 2,
+            "TVS": 2,
+            "FEROZ": 1,
+            "KAWASAKI": 1,
+            "SUZUKI": 1,
+            "TRIKE": 1
+          }
+        },
+        "Paysandú": {
+          "total": 227,
+          "marcas": {
+            "BACCIO": 65,
+            "YUMBO": 63,
+            "ZANELLA": 38,
+            "HONDA": 18,
+            "YAMAHA": 8,
+            "KEEWAY": 7,
+            "TVS": 7,
+            "DIRTY": 4,
+            "LIFAN": 3,
+            "ROYAL ENFIELD": 2,
+            "VITAL": 2,
+            "ARES": 1,
+            "BAJAJ": 1,
+            "CFMOTO": 1,
+            "KILAND": 1,
+            "KIOTO": 1,
+            "LONCIN": 1,
+            "RAVELAND": 1,
+            "RIP COLOR": 1,
+            "TANGO": 1,
+            "WINNER": 1
+          }
+        },
+        "Soriano": {
+          "total": 226,
+          "marcas": {
+            "BACCIO": 81,
+            "YUMBO": 54,
+            "ZANELLA": 27,
+            "HONDA": 11,
+            "RAVELAND": 8,
+            "KEEWAY": 6,
+            "LIFAN": 6,
+            "VELOSOLEX": 6,
+            "ARES": 3,
+            "DIRTY": 3,
+            "VITAL": 3,
+            "E-YUMBO": 2,
+            "KOVE": 2,
+            "TANGO": 2,
+            "TVS": 2,
+            "YAMAHA": 2,
+            "BAJAJ": 1,
+            "CFMOTO": 1,
+            "FEROZ": 1,
+            "KTM": 1,
+            "MORBIDELLI": 1,
+            "TRIKE": 1,
+            "VOGE": 1,
+            "XMOTOS": 1
+          }
+        },
+        "Cerro Largo": {
+          "total": 192,
+          "marcas": {
+            "YUMBO": 43,
+            "BACCIO": 41,
+            "ZANELLA": 20,
+            "VITAL": 17,
+            "HONDA": 12,
+            "YAMAHA": 11,
+            "TVS": 9,
+            "DIRTY": 6,
+            "KEEWAY": 6,
+            "LIFAN": 5,
+            "ARES": 3,
+            "FEROZ": 3,
+            "KIOTO": 3,
+            "TANGO": 3,
+            "WINNER": 2,
+            "CFMOTO": 1,
+            "E-YUMBO": 1,
+            "MOTO MORINI": 1,
+            "RAVELAND": 1,
+            "ROYAL ENFIELD": 1,
+            "SUZUKI": 1,
+            "TRIKE": 1,
+            "VINCE": 1
+          }
+        },
+        "Tacuarembó": {
+          "total": 186,
+          "marcas": {
+            "BACCIO": 51,
+            "YUMBO": 51,
+            "HONDA": 21,
+            "KIOTO": 19,
+            "ZANELLA": 19,
+            "VITAL": 12,
+            "YAMAHA": 4,
+            "BENELLI": 1,
+            "CFMOTO": 1,
+            "KAWASAKI": 1,
+            "KILAND": 1,
+            "KTM": 1,
+            "LIFAN": 1,
+            "MORBIDELLI": 1,
+            "TANGO": 1,
+            "TVS": 1
+          }
+        },
+        "San José": {
+          "total": 172,
+          "marcas": {
+            "YUMBO": 39,
+            "BACCIO": 38,
+            "ZANELLA": 38,
+            "KEEWAY": 15,
+            "HONDA": 8,
+            "DIRTY": 6,
+            "VITAL": 6,
+            "LONCIN": 5,
+            "TVS": 5,
+            "TRIKE": 3,
+            "ARES": 1,
+            "BAJAJ": 1,
+            "BETA": 1,
+            "CFMOTO": 1,
+            "DARKO": 1,
+            "KILAND": 1,
+            "MORBIDELLI": 1,
+            "VINCE": 1,
+            "YAMAHA": 1
+          }
+        },
+        "Rocha": {
+          "total": 154,
+          "marcas": {
+            "BACCIO": 50,
+            "ZANELLA": 29,
+            "YUMBO": 20,
+            "VITAL": 13,
+            "HONDA": 9,
+            "KIOTO": 9,
+            "LIFAN": 5,
+            "ARES": 3,
+            "FEROZ": 3,
+            "VOGE": 3,
+            "DIRTY": 2,
+            "E-YUMBO": 2,
+            "BAJAJ": 1,
+            "CFMOTO": 1,
+            "DANIOU": 1,
+            "QIANJIANG-QJIANG": 1,
+            "RIMUX": 1,
+            "ZXMOTO": 1
+          }
+        },
+        "Durazno": {
+          "total": 146,
+          "marcas": {
+            "ZANELLA": 56,
+            "YUMBO": 24,
+            "BACCIO": 20,
+            "HONDA": 10,
+            "KEEWAY": 6,
+            "LIFAN": 6,
+            "VITAL": 5,
+            "ZENDA": 4,
+            "KIOTO": 3,
+            "RAVELAND": 2,
+            "TANGO": 2,
+            "CFLITE": 1,
+            "CFMOTO": 1,
+            "ESUN": 1,
+            "KAWASAKI": 1,
+            "KYMCO": 1,
+            "RIP COLOR": 1,
+            "XMOTOS": 1,
+            "YAMAHA": 1
+          }
+        },
+        "Artigas": {
+          "total": 138,
+          "marcas": {
+            "YUMBO": 48,
+            "BACCIO": 19,
+            "ZANELLA": 15,
+            "VITAL": 10,
+            "DIRTY": 9,
+            "LIFAN": 8,
+            "TANGO": 7,
+            "XAPRIL": 5,
+            "ARES": 4,
+            "KIOTO": 4,
+            "VINCE": 4,
+            "HONDA": 2,
+            "YAMAHA": 2,
+            "KEEWAY": 1
+          }
+        },
+        "Río Negro": {
+          "total": 121,
+          "marcas": {
+            "BACCIO": 37,
+            "ZANELLA": 32,
+            "YUMBO": 18,
+            "HONDA": 7,
+            "RAVELAND": 4,
+            "VITAL": 4,
+            "YAMAHA": 3,
+            "BAJAJ": 2,
+            "KEEWAY": 2,
+            "VELOSOLEX": 2,
+            "APRILIA": 1,
+            "CFLITE": 1,
+            "CFMOTO": 1,
+            "DIRTY": 1,
+            "FEROZ": 1,
+            "KILAND": 1,
+            "LONCIN": 1,
+            "TITAN": 1,
+            "TVS": 1,
+            "XMOTOS": 1
+          }
+        },
+        "Florida": {
+          "total": 115,
+          "marcas": {
+            "BACCIO": 64,
+            "YUMBO": 14,
+            "ZANELLA": 14,
+            "HONDA": 6,
+            "YAMAHA": 6,
+            "LIFAN": 2,
+            "DIRTY": 1,
+            "E-YUMBO": 1,
+            "FEROZ": 1,
+            "KEEWAY": 1,
+            "RAVELAND": 1,
+            "RIP COLOR": 1,
+            "SUZUKI": 1,
+            "TRIAL": 1,
+            "VITAL": 1
+          }
+        },
+        "Rivera": {
+          "total": 109,
+          "marcas": {
+            "YUMBO": 41,
+            "ZANELLA": 19,
+            "BACCIO": 18,
+            "HONDA": 10,
+            "KEEWAY": 5,
+            "VINCE": 4,
+            "VITAL": 3,
+            "BAJAJ": 2,
+            "KIOTO": 2,
+            "CFMOTO": 1,
+            "HAOJUE": 1,
+            "KYMCO": 1,
+            "LONCIN": 1,
+            "YAMAHA": 1
+          }
+        },
+        "Treinta y Tres": {
+          "total": 87,
+          "marcas": {
+            "BACCIO": 27,
+            "YUMBO": 25,
+            "ZANELLA": 12,
+            "HONDA": 7,
+            "VITAL": 6,
+            "KEEWAY": 3,
+            "DIRTY": 2,
+            "FEROZ": 2,
+            "LIFAN": 1,
+            "TVS": 1,
+            "YAMAHA": 1
+          }
+        },
+        "Lavalleja": {
+          "total": 80,
+          "marcas": {
+            "BACCIO": 31,
+            "YUMBO": 24,
+            "ZANELLA": 9,
+            "HONDA": 3,
+            "KEEWAY": 3,
+            "VITAL": 3,
+            "LONCIN": 2,
+            "DIRTY": 1,
+            "FEROZ": 1,
+            "TANGO": 1,
+            "VOGE": 1,
+            "YAMAHA": 1
+          }
+        },
+        "Flores": {
+          "total": 50,
+          "marcas": {
+            "ZANELLA": 12,
+            "BACCIO": 9,
+            "YUMBO": 8,
+            "HONDA": 4,
+            "LIFAN": 3,
+            "CFMOTO": 2,
+            "E-YUMBO": 2,
+            "VITAL": 2,
+            "ARES": 1,
+            "BAJAJ": 1,
+            "KEEWAY": 1,
+            "KIOTO": 1,
+            "KIWI": 1,
+            "KOVE": 1,
+            "RAVELAND": 1,
+            "YADEA": 1
+          }
+        }
+      },
+      "brand_stats": {
+        "ARES": {
+          "total": 35,
+          "share": 0.68,
+          "n_deptos": 12,
+          "penetracion": 63,
+          "seg": "economica",
+          "presencia": {
+            "Artigas": 4,
+            "Canelones": 5,
+            "Cerro Largo": 3,
+            "Colonia": 4,
+            "Flores": 1,
+            "Salto": 7,
+            "Paysandú": 1,
+            "Soriano": 3,
+            "San José": 1,
+            "Maldonado": 1,
+            "Rocha": 3,
+            "Montevideo": 2
+          }
+        },
+        "BACCIO": {
+          "total": 1169,
+          "share": 22.87,
+          "n_deptos": 19,
+          "penetracion": 100,
+          "seg": "economica",
+          "presencia": {
+            "Artigas": 19,
+            "Canelones": 126,
+            "Cerro Largo": 41,
+            "Colonia": 93,
+            "Durazno": 20,
+            "Flores": 9,
+            "Salto": 107,
+            "Paysandú": 65,
+            "Tacuarembó": 51,
+            "Soriano": 81,
+            "Río Negro": 37,
+            "San José": 38,
+            "Treinta y Tres": 27,
+            "Maldonado": 128,
+            "Rocha": 50,
+            "Florida": 64,
+            "Rivera": 18,
+            "Lavalleja": 31,
+            "Montevideo": 164
+          }
+        },
+        "DIRTY": {
+          "total": 75,
+          "share": 1.47,
+          "n_deptos": 14,
+          "penetracion": 74,
+          "seg": "economica",
+          "presencia": {
+            "Artigas": 9,
+            "Canelones": 13,
+            "Cerro Largo": 6,
+            "Salto": 2,
+            "Paysandú": 4,
+            "Soriano": 3,
+            "Río Negro": 1,
+            "San José": 6,
+            "Treinta y Tres": 2,
+            "Maldonado": 4,
+            "Rocha": 2,
+            "Florida": 1,
+            "Lavalleja": 1,
+            "Montevideo": 21
+          }
+        },
+        "HONDA": {
+          "total": 348,
+          "share": 6.81,
+          "n_deptos": 19,
+          "penetracion": 100,
+          "seg": "premium",
+          "presencia": {
+            "Artigas": 2,
+            "Canelones": 21,
+            "Cerro Largo": 12,
+            "Colonia": 11,
+            "Durazno": 10,
+            "Flores": 4,
+            "Salto": 29,
+            "Paysandú": 18,
+            "Tacuarembó": 21,
+            "Soriano": 11,
+            "Río Negro": 7,
+            "San José": 8,
+            "Treinta y Tres": 7,
+            "Maldonado": 15,
+            "Rocha": 9,
+            "Florida": 6,
+            "Rivera": 10,
+            "Lavalleja": 3,
+            "Montevideo": 144
+          }
+        },
+        "KEEWAY": {
+          "total": 207,
+          "share": 4.05,
+          "n_deptos": 17,
+          "penetracion": 89,
+          "seg": "media",
+          "presencia": {
+            "Artigas": 1,
+            "Canelones": 36,
+            "Cerro Largo": 6,
+            "Colonia": 2,
+            "Durazno": 6,
+            "Flores": 1,
+            "Salto": 3,
+            "Paysandú": 7,
+            "Soriano": 6,
+            "Río Negro": 2,
+            "San José": 15,
+            "Treinta y Tres": 3,
+            "Maldonado": 20,
+            "Florida": 1,
+            "Rivera": 5,
+            "Lavalleja": 3,
+            "Montevideo": 90
+          }
+        },
+        "KIOTO": {
+          "total": 74,
+          "share": 1.45,
+          "n_deptos": 11,
+          "penetracion": 58,
+          "seg": "economica",
+          "presencia": {
+            "Artigas": 4,
+            "Canelones": 8,
+            "Cerro Largo": 3,
+            "Durazno": 3,
+            "Flores": 1,
+            "Paysandú": 1,
+            "Tacuarembó": 19,
+            "Maldonado": 5,
+            "Rocha": 9,
+            "Rivera": 2,
+            "Montevideo": 19
+          }
+        },
+        "LIFAN": {
+          "total": 116,
+          "share": 2.27,
+          "n_deptos": 15,
+          "penetracion": 79,
+          "seg": "economica",
+          "presencia": {
+            "Artigas": 8,
+            "Canelones": 25,
+            "Cerro Largo": 5,
+            "Colonia": 9,
+            "Durazno": 6,
+            "Flores": 3,
+            "Salto": 4,
+            "Paysandú": 3,
+            "Tacuarembó": 1,
+            "Soriano": 6,
+            "Treinta y Tres": 1,
+            "Maldonado": 10,
+            "Rocha": 5,
+            "Florida": 2,
+            "Montevideo": 28
+          }
+        },
+        "TANGO": {
+          "total": 19,
+          "share": 0.37,
+          "n_deptos": 9,
+          "penetracion": 47,
+          "seg": "economica",
+          "presencia": {
+            "Artigas": 7,
+            "Cerro Largo": 3,
+            "Durazno": 2,
+            "Salto": 1,
+            "Paysandú": 1,
+            "Tacuarembó": 1,
+            "Soriano": 2,
+            "Lavalleja": 1,
+            "Montevideo": 1
+          }
+        },
+        "VINCE": {
+          "total": 11,
+          "share": 0.22,
+          "n_deptos": 5,
+          "penetracion": 26,
+          "seg": "otras",
+          "presencia": {
+            "Artigas": 4,
+            "Canelones": 1,
+            "Cerro Largo": 1,
+            "San José": 1,
+            "Rivera": 4
+          }
+        },
+        "VITAL": {
+          "total": 281,
+          "share": 5.5,
+          "n_deptos": 19,
+          "penetracion": 100,
+          "seg": "economica",
+          "presencia": {
+            "Artigas": 10,
+            "Canelones": 67,
+            "Cerro Largo": 17,
+            "Colonia": 9,
+            "Durazno": 5,
+            "Flores": 2,
+            "Salto": 10,
+            "Paysandú": 2,
+            "Tacuarembó": 12,
+            "Soriano": 3,
+            "Río Negro": 4,
+            "San José": 6,
+            "Treinta y Tres": 6,
+            "Maldonado": 26,
+            "Rocha": 13,
+            "Florida": 1,
+            "Rivera": 3,
+            "Lavalleja": 3,
+            "Montevideo": 82
+          }
+        },
+        "XAPRIL": {
+          "total": 5,
+          "share": 0.1,
+          "n_deptos": 1,
+          "penetracion": 5,
+          "seg": "economica",
+          "presencia": {
+            "Artigas": 5
+          }
+        },
+        "YAMAHA": {
+          "total": 126,
+          "share": 2.47,
+          "n_deptos": 17,
+          "penetracion": 89,
+          "seg": "premium",
+          "presencia": {
+            "Artigas": 2,
+            "Canelones": 15,
+            "Cerro Largo": 11,
+            "Colonia": 8,
+            "Durazno": 1,
+            "Salto": 10,
+            "Paysandú": 8,
+            "Tacuarembó": 4,
+            "Soriano": 2,
+            "Río Negro": 3,
+            "San José": 1,
+            "Treinta y Tres": 1,
+            "Maldonado": 7,
+            "Florida": 6,
+            "Rivera": 1,
+            "Lavalleja": 1,
+            "Montevideo": 45
+          }
+        },
+        "YUMBO": {
+          "total": 956,
+          "share": 18.7,
+          "n_deptos": 19,
+          "penetracion": 100,
+          "seg": "economica",
+          "presencia": {
+            "Artigas": 48,
+            "Canelones": 101,
+            "Cerro Largo": 43,
+            "Colonia": 49,
+            "Durazno": 24,
+            "Flores": 8,
+            "Salto": 69,
+            "Paysandú": 63,
+            "Tacuarembó": 51,
+            "Soriano": 54,
+            "Río Negro": 18,
+            "San José": 39,
+            "Treinta y Tres": 25,
+            "Maldonado": 63,
+            "Rocha": 20,
+            "Florida": 14,
+            "Rivera": 41,
+            "Lavalleja": 24,
+            "Montevideo": 202
+          }
+        },
+        "ZANELLA": {
+          "total": 1100,
+          "share": 21.52,
+          "n_deptos": 19,
+          "penetracion": 100,
+          "seg": "economica",
+          "presencia": {
+            "Artigas": 15,
+            "Canelones": 273,
+            "Cerro Largo": 20,
+            "Colonia": 39,
+            "Durazno": 56,
+            "Flores": 12,
+            "Salto": 42,
+            "Paysandú": 38,
+            "Tacuarembó": 19,
+            "Soriano": 27,
+            "Río Negro": 32,
+            "San José": 38,
+            "Treinta y Tres": 12,
+            "Maldonado": 50,
+            "Rocha": 29,
+            "Florida": 14,
+            "Rivera": 19,
+            "Lavalleja": 9,
+            "Montevideo": 356
+          }
+        },
+        "BAJAJ": {
+          "total": 101,
+          "share": 1.98,
+          "n_deptos": 10,
+          "penetracion": 53,
+          "seg": "media",
+          "presencia": {
+            "Canelones": 22,
+            "Flores": 1,
+            "Paysandú": 1,
+            "Soriano": 1,
+            "Río Negro": 2,
+            "San José": 1,
+            "Maldonado": 16,
+            "Rocha": 1,
+            "Rivera": 2,
+            "Montevideo": 54
+          }
+        },
+        "BENELLI": {
+          "total": 4,
+          "share": 0.08,
+          "n_deptos": 3,
+          "penetracion": 16,
+          "seg": "media",
+          "presencia": {
+            "Canelones": 1,
+            "Tacuarembó": 1,
+            "Montevideo": 2
+          }
+        },
+        "CFLITE": {
+          "total": 9,
+          "share": 0.18,
+          "n_deptos": 5,
+          "penetracion": 26,
+          "seg": "media",
+          "presencia": {
+            "Canelones": 3,
+            "Durazno": 1,
+            "Salto": 1,
+            "Río Negro": 1,
+            "Montevideo": 3
+          }
+        },
+        "CFMOTO": {
+          "total": 48,
+          "share": 0.94,
+          "n_deptos": 14,
+          "penetracion": 74,
+          "seg": "media",
+          "presencia": {
+            "Canelones": 5,
+            "Cerro Largo": 1,
+            "Colonia": 3,
+            "Durazno": 1,
+            "Flores": 2,
+            "Paysandú": 1,
+            "Tacuarembó": 1,
+            "Soriano": 1,
+            "Río Negro": 1,
+            "San José": 1,
+            "Maldonado": 10,
+            "Rocha": 1,
+            "Rivera": 1,
+            "Montevideo": 19
+          }
+        },
+        "FEROZ": {
+          "total": 17,
+          "share": 0.33,
+          "n_deptos": 11,
+          "penetracion": 58,
+          "seg": "otras",
+          "presencia": {
+            "Canelones": 1,
+            "Cerro Largo": 3,
+            "Colonia": 1,
+            "Soriano": 1,
+            "Río Negro": 1,
+            "Treinta y Tres": 2,
+            "Maldonado": 1,
+            "Rocha": 3,
+            "Florida": 1,
+            "Lavalleja": 1,
+            "Montevideo": 2
+          }
+        },
+        "GOLDTECH": {
+          "total": 2,
+          "share": 0.04,
+          "n_deptos": 1,
+          "penetracion": 5,
+          "seg": "otras",
+          "presencia": {
+            "Canelones": 2
+          }
+        },
+        "GREEN PRIDE": {
+          "total": 1,
+          "share": 0.02,
+          "n_deptos": 1,
+          "penetracion": 5,
+          "seg": "otras",
+          "presencia": {
+            "Canelones": 1
+          }
+        },
+        "HENSIM": {
+          "total": 2,
+          "share": 0.04,
+          "n_deptos": 2,
+          "penetracion": 11,
+          "seg": "otras",
+          "presencia": {
+            "Canelones": 1,
+            "Montevideo": 1
+          }
+        },
+        "HERO HONDA": {
+          "total": 1,
+          "share": 0.02,
+          "n_deptos": 1,
+          "penetracion": 5,
+          "seg": "otras",
+          "presencia": {
+            "Canelones": 1
+          }
+        },
+        "KIWI": {
+          "total": 2,
+          "share": 0.04,
+          "n_deptos": 2,
+          "penetracion": 11,
+          "seg": "otras",
+          "presencia": {
+            "Canelones": 1,
+            "Flores": 1
+          }
+        },
+        "KOVE": {
+          "total": 10,
+          "share": 0.2,
+          "n_deptos": 5,
+          "penetracion": 26,
+          "seg": "otras",
+          "presencia": {
+            "Canelones": 1,
+            "Colonia": 2,
+            "Flores": 1,
+            "Soriano": 2,
+            "Montevideo": 4
+          }
+        },
+        "KTM": {
+          "total": 15,
+          "share": 0.29,
+          "n_deptos": 4,
+          "penetracion": 21,
+          "seg": "premium",
+          "presencia": {
+            "Canelones": 1,
+            "Tacuarembó": 1,
+            "Soriano": 1,
+            "Montevideo": 12
+          }
+        },
+        "LONCIN": {
+          "total": 46,
+          "share": 0.9,
+          "n_deptos": 9,
+          "penetracion": 47,
+          "seg": "economica",
+          "presencia": {
+            "Canelones": 3,
+            "Colonia": 5,
+            "Paysandú": 1,
+            "Río Negro": 1,
+            "San José": 5,
+            "Maldonado": 6,
+            "Rivera": 1,
+            "Lavalleja": 2,
+            "Montevideo": 22
+          }
+        },
+        "MORBIDELLI": {
+          "total": 12,
+          "share": 0.23,
+          "n_deptos": 6,
+          "penetracion": 32,
+          "seg": "otras",
+          "presencia": {
+            "Canelones": 3,
+            "Tacuarembó": 1,
+            "Soriano": 1,
+            "San José": 1,
+            "Maldonado": 1,
+            "Montevideo": 5
+          }
+        },
+        "NIU": {
+          "total": 1,
+          "share": 0.02,
+          "n_deptos": 1,
+          "penetracion": 5,
+          "seg": "otras",
+          "presencia": {
+            "Canelones": 1
+          }
+        },
+        "RAVELAND": {
+          "total": 22,
+          "share": 0.43,
+          "n_deptos": 9,
+          "penetracion": 47,
+          "seg": "economica",
+          "presencia": {
+            "Canelones": 1,
+            "Cerro Largo": 1,
+            "Colonia": 3,
+            "Durazno": 2,
+            "Flores": 1,
+            "Paysandú": 1,
+            "Soriano": 8,
+            "Río Negro": 4,
+            "Florida": 1
+          }
+        },
+        "ROYAL ENFIELD": {
+          "total": 15,
+          "share": 0.29,
+          "n_deptos": 5,
+          "penetracion": 26,
+          "seg": "premium",
+          "presencia": {
+            "Canelones": 1,
+            "Cerro Largo": 1,
+            "Paysandú": 2,
+            "Maldonado": 1,
+            "Montevideo": 10
+          }
+        },
+        "SUZUKI": {
+          "total": 34,
+          "share": 0.67,
+          "n_deptos": 7,
+          "penetracion": 37,
+          "seg": "premium",
+          "presencia": {
+            "Canelones": 6,
+            "Cerro Largo": 1,
+            "Colonia": 1,
+            "Salto": 1,
+            "Maldonado": 9,
+            "Florida": 1,
+            "Montevideo": 15
+          }
+        },
+        "TRIKE": {
+          "total": 14,
+          "share": 0.27,
+          "n_deptos": 7,
+          "penetracion": 37,
+          "seg": "economica",
+          "presencia": {
+            "Canelones": 4,
+            "Cerro Largo": 1,
+            "Colonia": 1,
+            "Soriano": 1,
+            "San José": 3,
+            "Maldonado": 3,
+            "Montevideo": 1
+          }
+        },
+        "TVS": {
+          "total": 61,
+          "share": 1.19,
+          "n_deptos": 11,
+          "penetracion": 58,
+          "seg": "media",
+          "presencia": {
+            "Canelones": 8,
+            "Cerro Largo": 9,
+            "Colonia": 2,
+            "Paysandú": 7,
+            "Tacuarembó": 1,
+            "Soriano": 2,
+            "Río Negro": 1,
+            "San José": 5,
+            "Treinta y Tres": 1,
+            "Maldonado": 4,
+            "Montevideo": 21
+          }
+        },
+        "VELOSOLEX": {
+          "total": 12,
+          "share": 0.23,
+          "n_deptos": 5,
+          "penetracion": 26,
+          "seg": "electrica",
+          "presencia": {
+            "Canelones": 1,
+            "Soriano": 6,
+            "Río Negro": 2,
+            "Maldonado": 2,
+            "Montevideo": 1
+          }
+        },
+        "VERADO": {
+          "total": 1,
+          "share": 0.02,
+          "n_deptos": 1,
+          "penetracion": 5,
+          "seg": "otras",
+          "presencia": {
+            "Canelones": 1
+          }
+        },
+        "WINNER": {
+          "total": 4,
+          "share": 0.08,
+          "n_deptos": 3,
+          "penetracion": 16,
+          "seg": "economica",
+          "presencia": {
+            "Canelones": 1,
+            "Cerro Largo": 2,
+            "Paysandú": 1
+          }
+        },
+        "XMOTOS": {
+          "total": 6,
+          "share": 0.12,
+          "n_deptos": 6,
+          "penetracion": 32,
+          "seg": "economica",
+          "presencia": {
+            "Canelones": 1,
+            "Durazno": 1,
+            "Salto": 1,
+            "Soriano": 1,
+            "Río Negro": 1,
+            "Maldonado": 1
+          }
+        },
+        "YIWO TRADING": {
+          "total": 1,
+          "share": 0.02,
+          "n_deptos": 1,
+          "penetracion": 5,
+          "seg": "otras",
+          "presencia": {
+            "Canelones": 1
+          }
+        },
+        "ZENDA": {
+          "total": 16,
+          "share": 0.31,
+          "n_deptos": 3,
+          "penetracion": 16,
+          "seg": "otras",
+          "presencia": {
+            "Canelones": 1,
+            "Durazno": 4,
+            "Montevideo": 11
+          }
+        },
+        "ZONTES": {
+          "total": 19,
+          "share": 0.37,
+          "n_deptos": 3,
+          "penetracion": 16,
+          "seg": "media",
+          "presencia": {
+            "Canelones": 3,
+            "Maldonado": 2,
+            "Montevideo": 14
+          }
+        },
+        "E-YUMBO": {
+          "total": 9,
+          "share": 0.18,
+          "n_deptos": 6,
+          "penetracion": 32,
+          "seg": "electrica",
+          "presencia": {
+            "Cerro Largo": 1,
+            "Flores": 2,
+            "Salto": 1,
+            "Soriano": 2,
+            "Rocha": 2,
+            "Florida": 1
+          }
+        },
+        "MOTO MORINI": {
+          "total": 2,
+          "share": 0.04,
+          "n_deptos": 2,
+          "penetracion": 11,
+          "seg": "otras",
+          "presencia": {
+            "Cerro Largo": 1,
+            "Maldonado": 1
+          }
+        },
+        "KAWASAKI": {
+          "total": 7,
+          "share": 0.14,
+          "n_deptos": 5,
+          "penetracion": 26,
+          "seg": "premium",
+          "presencia": {
+            "Colonia": 1,
+            "Durazno": 1,
+            "Tacuarembó": 1,
+            "Maldonado": 2,
+            "Montevideo": 2
+          }
+        },
+        "QJ": {
+          "total": 4,
+          "share": 0.08,
+          "n_deptos": 2,
+          "penetracion": 11,
+          "seg": "otras",
+          "presencia": {
+            "Colonia": 2,
+            "Montevideo": 2
+          }
+        },
+        "ESUN": {
+          "total": 2,
+          "share": 0.04,
+          "n_deptos": 2,
+          "penetracion": 11,
+          "seg": "otras",
+          "presencia": {
+            "Durazno": 1,
+            "Montevideo": 1
+          }
+        },
+        "KYMCO": {
+          "total": 3,
+          "share": 0.06,
+          "n_deptos": 3,
+          "penetracion": 16,
+          "seg": "otras",
+          "presencia": {
+            "Durazno": 1,
+            "Rivera": 1,
+            "Montevideo": 1
+          }
+        },
+        "RIP COLOR": {
+          "total": 7,
+          "share": 0.14,
+          "n_deptos": 5,
+          "penetracion": 26,
+          "seg": "otras",
+          "presencia": {
+            "Durazno": 1,
+            "Paysandú": 1,
+            "Maldonado": 1,
+            "Florida": 1,
+            "Montevideo": 3
+          }
+        },
+        "YADEA": {
+          "total": 1,
+          "share": 0.02,
+          "n_deptos": 1,
+          "penetracion": 5,
+          "seg": "otras",
+          "presencia": {
+            "Flores": 1
+          }
+        },
+        "Salto SANYANG": {
+          "total": 1,
+          "share": 0.02,
+          "n_deptos": 1,
+          "penetracion": 5,
+          "seg": "otras",
+          "presencia": {
+            "Salto": 1
+          }
+        },
+        "VOGE": {
+          "total": 15,
+          "share": 0.29,
+          "n_deptos": 5,
+          "penetracion": 26,
+          "seg": "media",
+          "presencia": {
+            "Salto": 1,
+            "Soriano": 1,
+            "Rocha": 3,
+            "Lavalleja": 1,
+            "Montevideo": 9
+          }
+        },
+        "ZXMOTO": {
+          "total": 9,
+          "share": 0.18,
+          "n_deptos": 4,
+          "penetracion": 21,
+          "seg": "otras",
+          "presencia": {
+            "Salto": 1,
+            "Maldonado": 1,
+            "Rocha": 1,
+            "Montevideo": 6
+          }
+        },
+        "KILAND": {
+          "total": 4,
+          "share": 0.08,
+          "n_deptos": 4,
+          "penetracion": 21,
+          "seg": "otras",
+          "presencia": {
+            "Paysandú": 1,
+            "Tacuarembó": 1,
+            "Río Negro": 1,
+            "San José": 1
+          }
+        },
+        "APRILIA": {
+          "total": 1,
+          "share": 0.02,
+          "n_deptos": 1,
+          "penetracion": 5,
+          "seg": "premium",
+          "presencia": {
+            "Río Negro": 1
+          }
+        },
+        "TITAN": {
+          "total": 2,
+          "share": 0.04,
+          "n_deptos": 2,
+          "penetracion": 11,
+          "seg": "economica",
+          "presencia": {
+            "Río Negro": 1,
+            "Maldonado": 1
+          }
+        },
+        "BETA": {
+          "total": 3,
+          "share": 0.06,
+          "n_deptos": 3,
+          "penetracion": 16,
+          "seg": "media",
+          "presencia": {
+            "San José": 1,
+            "Maldonado": 1,
+            "Montevideo": 1
+          }
+        },
+        "DARKO": {
+          "total": 2,
+          "share": 0.04,
+          "n_deptos": 2,
+          "penetracion": 11,
+          "seg": "economica",
+          "presencia": {
+            "San José": 1,
+            "Montevideo": 1
+          }
+        },
+        "BMW": {
+          "total": 1,
+          "share": 0.02,
+          "n_deptos": 1,
+          "penetracion": 5,
+          "seg": "premium",
+          "presencia": {
+            "Maldonado": 1
+          }
+        },
+        "HAOJUE": {
+          "total": 12,
+          "share": 0.23,
+          "n_deptos": 3,
+          "penetracion": 16,
+          "seg": "media",
+          "presencia": {
+            "Maldonado": 3,
+            "Rivera": 1,
+            "Montevideo": 8
+          }
+        },
+        "HARLEY DAVIDSON": {
+          "total": 1,
+          "share": 0.02,
+          "n_deptos": 1,
+          "penetracion": 5,
+          "seg": "premium",
+          "presencia": {
+            "Maldonado": 1
+          }
+        },
+        "HUSABERG": {
+          "total": 1,
+          "share": 0.02,
+          "n_deptos": 1,
+          "penetracion": 5,
+          "seg": "otras",
+          "presencia": {
+            "Maldonado": 1
+          }
+        },
+        "HUSQVARNA": {
+          "total": 4,
+          "share": 0.08,
+          "n_deptos": 2,
+          "penetracion": 11,
+          "seg": "otras",
+          "presencia": {
+            "Maldonado": 2,
+            "Montevideo": 2
+          }
+        },
+        "MOTORI": {
+          "total": 1,
+          "share": 0.02,
+          "n_deptos": 1,
+          "penetracion": 5,
+          "seg": "otras",
+          "presencia": {
+            "Maldonado": 1
+          }
+        },
+        "TXM": {
+          "total": 1,
+          "share": 0.02,
+          "n_deptos": 1,
+          "penetracion": 5,
+          "seg": "otras",
+          "presencia": {
+            "Maldonado": 1
+          }
+        },
+        "DANIOU": {
+          "total": 1,
+          "share": 0.02,
+          "n_deptos": 1,
+          "penetracion": 5,
+          "seg": "economica",
+          "presencia": {
+            "Rocha": 1
+          }
+        },
+        "QIANJIANG-QJIANG": {
+          "total": 1,
+          "share": 0.02,
+          "n_deptos": 1,
+          "penetracion": 5,
+          "seg": "otras",
+          "presencia": {
+            "Rocha": 1
+          }
+        },
+        "RIMUX": {
+          "total": 1,
+          "share": 0.02,
+          "n_deptos": 1,
+          "penetracion": 5,
+          "seg": "otras",
+          "presencia": {
+            "Rocha": 1
+          }
+        },
+        "TRIAL": {
+          "total": 1,
+          "share": 0.02,
+          "n_deptos": 1,
+          "penetracion": 5,
+          "seg": "otras",
+          "presencia": {
+            "Florida": 1
+          }
+        },
+        "BENDA": {
+          "total": 1,
+          "share": 0.02,
+          "n_deptos": 1,
+          "penetracion": 5,
+          "seg": "otras",
+          "presencia": {
+            "Montevideo": 1
+          }
+        },
+        "CAN AM": {
+          "total": 1,
+          "share": 0.02,
+          "n_deptos": 1,
+          "penetracion": 5,
+          "seg": "otras",
+          "presencia": {
+            "Montevideo": 1
+          }
+        },
+        "MTR": {
+          "total": 1,
+          "share": 0.02,
+          "n_deptos": 1,
+          "penetracion": 5,
+          "seg": "otras",
+          "presencia": {
+            "Montevideo": 1
+          }
+        },
+        "RIEJU": {
+          "total": 1,
+          "share": 0.02,
+          "n_deptos": 1,
+          "penetracion": 5,
+          "seg": "otras",
+          "presencia": {
+            "Montevideo": 1
+          }
+        },
+        "SANYANG": {
+          "total": 1,
+          "share": 0.02,
+          "n_deptos": 1,
+          "penetracion": 5,
+          "seg": "otras",
+          "presencia": {
+            "Montevideo": 1
+          }
+        },
+        "SUNRA": {
+          "total": 1,
+          "share": 0.02,
+          "n_deptos": 1,
+          "penetracion": 5,
+          "seg": "electrica",
+          "presencia": {
+            "Montevideo": 1
+          }
+        },
+        "TORO": {
+          "total": 2,
+          "share": 0.04,
+          "n_deptos": 1,
+          "penetracion": 5,
+          "seg": "otras",
+          "presencia": {
+            "Montevideo": 2
+          }
+        },
+        "VESPA": {
+          "total": 2,
+          "share": 0.04,
+          "n_deptos": 1,
+          "penetracion": 5,
+          "seg": "premium",
+          "presencia": {
+            "Montevideo": 2
+          }
+        },
+        "VMOTO": {
+          "total": 3,
+          "share": 0.06,
+          "n_deptos": 1,
+          "penetracion": 5,
+          "seg": "otras",
+          "presencia": {
+            "Montevideo": 3
+          }
+        },
+        "VOLTBIKE": {
+          "total": 2,
+          "share": 0.04,
+          "n_deptos": 1,
+          "penetracion": 5,
+          "seg": "otras",
+          "presencia": {
+            "Montevideo": 2
+          }
+        },
+        "WUYANG": {
+          "total": 1,
+          "share": 0.02,
+          "n_deptos": 1,
+          "penetracion": 5,
+          "seg": "otras",
+          "presencia": {
+            "Montevideo": 1
+          }
+        }
+      },
+      "seg_tot": {
+        "economica": 3927,
+        "premium": 550,
+        "media": 479,
+        "otras": 133,
+        "electrica": 22
       }
     }
   },
