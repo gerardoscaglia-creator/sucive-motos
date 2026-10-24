@@ -28,6 +28,11 @@ jobs:
       - name: Instalar dependencias
         run: pip install -r requirements.txt
 
+      - name: Verificar calendario y período del informe
+        run: |
+          node history.test.cjs
+          python pipeline_test.py
+
       - name: Bajar y parsear PDF de SUCIVE
         run: |
           python capture.py

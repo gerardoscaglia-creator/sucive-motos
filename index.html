@@ -129,8 +129,8 @@ function delta(cur,base){if(base==null||base===0)return null;return{abs:cur-base
 function chgHTML(cur,base,opt){opt=opt||{};const d=delta(cur,base);if(d==null)return '';const up=d.abs>=0,cls=up?'up':'down',ar=up?'▲':'▼',s=up?'+':'';return `<div class="chg ${cls}">${ar} ${s}${d.pct.toFixed(0)}%${opt.abs?` <span style="opacity:.75">(${s}${fmt(d.abs)})</span>`:''} <span class="tag" style="font-weight:400">vs ${cmpLabel()}</span></div>`;}
 function chgCell(cur,base){const d=delta(cur,base);if(d==null)return '<td class="num"><span class="tag">—</span></td>';const up=d.abs>=0;return `<td class="num"><span class="${up?'up':'down'}" style="font-weight:700">${up?'▲':'▼'} ${up?'+':''}${d.pct.toFixed(0)}%</span></td>`;}
 function cmpControl(){
-  if(!DS.prev)return '';
-  const opts=[`<option value="prev"${cmpMode==='prev'?' selected':''}>Mes anterior (${DS.prev})</option>`];
+  if(DS.periods.length<2)return '';
+  const opts=[`<option value="prev"${cmpMode==='prev'?' selected':''}>Mes anterior (${DS.prev||'sin datos'})</option>`];
   const ya=yearAgo(DS.latest);if(ya)opts.push(`<option value="year"${cmpMode==='year'?' selected':''}>Mismo mes año pasado (${ya})</option>`);
   periodsBefore(DS.latest).filter(p=>p!==DS.prev&&p!==yearAgo(DS.latest)).reverse().forEach(p=>opts.push(`<option value="${p}"${cmpMode===p?' selected':''}>${p}</option>`));
   return `<div class="row" style="margin:0 0 12px;align-items:center;gap:8px"><span class="tag">📊 Comparar <b style="color:var(--txt)">${DS.latest}</b> contra:</span><select id="cmpSel">${opts.join('')}</select></div>`;
@@ -338,33 +338,56 @@ function renderMarcaCompare(list,ctrl){
 }
 
 /* ===== HISTÓRICO ===== */
+let histYear=null;
+function historyYears(byPeriod,currentYear){
+  const known=Object.keys(byPeriod).map(p=>Number(p.slice(0,4)));
+  const first=Math.min(currentYear,...known),last=Math.max(currentYear+1,...known);
+  return Array.from({length:last-first+1},(_,i)=>String(first+i));
+}
+function historyMonths(byPeriod,year,currentPeriod){
+  return Array.from({length:12},(_,i)=>{
+    const period=String(year)+'-'+String(i+1).padStart(2,'0'),data=byPeriod[period]??null;
+    return {period,data,status:data?'Publicado':period>currentPeriod?'Mes futuro':period===currentPeriod?'Mes en curso':'Sin datos capturados'};
+  });
+}
+function historyChange(value,previous){
+  return value===null||previous===null||previous<=0?null:{abs:value-previous,pct:(value-previous)/previous*100};
+}
 function renderHist(){
-  const P=DS.periods;
-  if(P.length<2){
-    document.getElementById('view-hist').innerHTML=`<div class="card" style="text-align:center;padding:50px 20px">
-      <div style="font-size:40px;margin-bottom:10px">📈</div>
-      <h3 style="font-size:16px;color:var(--txt)">El histórico se está construyendo</h3>
-      <p class="insight" style="max-width:560px;margin:10px auto;color:var(--mut)">Arrancamos limpio en <b>${DS.latest}</b>. Cada mes el sistema baja el nuevo PDF de SUCIVE y suma un punto. Con 2+ meses vas a ver acá las tendencias por marca, crecimiento/caída y estacionalidad — en ${fname(focus)} y en cada departamento.</p>
-      <p class="tag">Próxima actualización automática: principios del mes que viene.</p></div>`;
-    return;
-  }
-  const mOf=(p,m)=>{const sc=DS.by_period[p];return (focus===PAIS?sc.nac_marcas:(sc.deptos[focus]||{marcas:{}}).marcas)[m]||0;};
-  const tOf=p=>focus===PAIS?DS.by_period[p].total_pais:(DS.by_period[p].deptos[focus]||{total:0}).total;
-  const ultimo=delta(tOf(DS.latest),DS.prev?tOf(DS.prev):null);
-  const evoHead=ultimo?`<div class="evo ${ultimo.abs>=0?'evo-up':'evo-down'}"><div class="evo-ico">${ultimo.abs>=0?'📈':'📉'}</div><div><div class="evo-big">${fname(focus)}: las ventas ${ultimo.abs>=0?'SUBIERON':'BAJARON'} ${Math.abs(ultimo.pct).toFixed(1)}% el último mes</div><div class="evo-sub">${DS.latest} vs ${DS.prev} · de <b>${fmt(tOf(DS.prev))}</b> a <b>${fmt(tOf(DS.latest))}</b> motos <b>(${ultimo.abs>=0?'+':''}${fmt(ultimo.abs)})</b></div></div></div>`:'';
-  const evoRows=P.map((p,i)=>{const pv=i>0?P[i-1]:null;const t=tOf(p);return `<tr><td>${p}${p===DS.latest?' <span class="pill gold">actual</span>':''}</td><td class="num" style="color:#fff;font-weight:700">${fmt(t)}</td>${pv?chgCell(t,tOf(pv)):'<td class="num"><span class="tag">—</span></td>'}${DS.track.map(m=>{const u=mOf(p,m),du=pv?delta(u,mOf(pv,m)):null;return `<td class="num">${fmt(u)}${du?` <span class="${du.abs>=0?'up':'down'}" style="font-size:10px">${du.abs>=0?'▲':'▼'}${du.abs>=0?'+':''}${du.pct.toFixed(0)}%</span>`:''}</td>`;}).join('')}</tr>`;}).join('');
+  const years=historyYears(DS.by_period,Number(new Intl.DateTimeFormat('en',{timeZone:'America/Montevideo',year:'numeric'}).format(new Date())));
+  if(!years.includes(String(histYear)))histYear=DS.latest.slice(0,4);
+  const now=new Date();
+  const parts=new Intl.DateTimeFormat('en',{timeZone:'America/Montevideo',year:'numeric',month:'2-digit'}).formatToParts(now);
+  const currentPeriod=parts.find(p=>p.type==='year').value+'-'+parts.find(p=>p.type==='month').value;
+  const rows=historyMonths(DS.by_period,histYear,currentPeriod),P=rows.map(r=>r.period);
+  const scope=p=>{const sc=DS.by_period[p];return !sc?null:focus===PAIS?{total:sc.total_pais,marcas:sc.nac_marcas}:sc.deptos[focus]||null;};
+  const mOf=(p,m)=>scope(p)?(scope(p).marcas[m]||0):null;
+  const tOf=p=>scope(p)?.total??null;
+  const display=v=>v===null?'—':fmt(v);
+  const prevOf=p=>{const [y,m]=p.split('-').map(Number);return m===1?`${y-1}-12`:`${y}-${String(m-1).padStart(2,'0')}`;};
+  const flecha=(c,dec,size)=>`<span class="${c.abs>=0?'up':'down'}" style="${size}">${c.abs>=0?'▲':'▼'}${dec?' ':''}${c.abs>=0?'+':''}${c.pct.toFixed(0)}%</span>`;
+  const ultimoPrev=prevOf(DS.latest),ultimo=historyChange(tOf(DS.latest),tOf(ultimoPrev));
+  const evoHead=ultimo?`<div class="evo ${ultimo.abs>=0?'evo-up':'evo-down'}"><div class="evo-ico">${ultimo.abs>=0?'📈':'📉'}</div><div><div class="evo-big">${fname(focus)}: las ventas ${ultimo.abs>=0?'SUBIERON':'BAJARON'} ${Math.abs(ultimo.pct).toFixed(1)}% el último mes</div><div class="evo-sub">${DS.latest} vs ${ultimoPrev} · de <b>${fmt(tOf(ultimoPrev))}</b> a <b>${fmt(tOf(DS.latest))}</b> motos <b>(${ultimo.abs>=0?'+':''}${fmt(ultimo.abs)})</b></div></div></div>`:'';
+  const evoRows=rows.map((r,i)=>{
+    const p=r.period,pv=i?P[i-1]:String(Number(histYear)-1)+'-12',change=historyChange(tOf(p),tOf(pv));
+    const estado=r.data?(scope(p)?(p===DS.latest?' <span class="pill gold">actual</span>':''):'<div class="tag">Sin datos de la zona</div>'):`<div class="tag">${({'Sin datos capturados':'Sin datos','Mes en curso':'En curso','Mes futuro':'Futuro'})[r.status]||r.status}</div>`;
+    const t=tOf(p),total=t===null?'<span class="tag">—</span>':fmt(t);
+    return `<tr><td>${p}${estado}</td><td class="num" style="color:#fff;font-weight:700">${total}</td><td class="num">${change?flecha(change,true,'font-weight:700'):'<span class="tag">—</span>'}</td>${DS.track.map(m=>{const u=mOf(p,m),du=historyChange(u,mOf(pv,m));return `<td class="num">${display(u)}${du?' '+flecha(du,false,'font-size:10px'):''}</td>`;}).join('')}</tr>`;
+  }).join('');
   document.getElementById('view-hist').innerHTML=`
    <div class="help">📈 <b>Cómo evolucionó el mercado mes a mes en ${fname(focus)}.</b> Qué marcas suben y cuáles bajan. Usá "📍 En tu zona" para cambiar de departamento.</div>
-   ${evoHead}
-   <div class="card"><h3>Variación mes a mes · ${fname(focus)}</h3><div style="overflow-x:auto"><table><thead><tr><th>Mes</th><th class="num">Total motos</th><th class="num">Δ vs mes previo</th>${DS.track.map(m=>`<th class="num" style="color:${COL[m]}">${m}</th>`).join('')}</tr></thead><tbody>${evoRows}</tbody></table></div><div class="legend"><span>▲/▼ = cómo varió ese mes contra el mes anterior. Verde sube, rojo baja.</span></div></div>
+   ${evoHead}<label>Año <select id="histYear">${years.map(y=>`<option value="${y}"${y===String(histYear)?' selected':''}>${y}</option>`).join('')}</select></label><p class="note">— = mes sin datos guardados (no es cero). Cada mes se compara con el mes anterior; si ese mes no tiene datos, no se compara.</p>
+   <div class="card"><h3>Variación mes a mes · ${fname(focus)}</h3><div style="overflow-x:auto"><table><thead><tr><th>Mes</th><th class="num">Total motos</th><th class="num">Δ vs mes previo</th>${DS.track.map(m=>`<th class="num" style="color:${COL[m]}">${m}</th>`).join('')}</tr></thead><tbody>${evoRows}</tbody></table></div><div class="legend"><span>▲/▼ = cómo varió ese mes contra el mes anterior. Verde sube, rojo baja. — = sin datos.</span></div></div>
    <div class="grid two" style="margin-top:14px"><div class="card"><h3>Tendencia por marca · ${fname(focus)}</h3><div class="chartbox"><canvas id="hMarca"></canvas></div></div>
    <div class="card"><h3>Total motos/mes · ${fname(focus)} vs País</h3><div class="chartbox"><canvas id="hTotal"></canvas></div></div></div>
    <div class="card" style="margin-top:14px"><h3>Evolución del share · ${fname(focus)} (%)</h3><div class="chartbox"><canvas id="hShare"></canvas></div></div>`;
+  document.getElementById('histYear').onchange=e=>{histYear=e.target.value;renderHist();};
   destroyCharts();
-  const ax={scales:{x:{ticks:{color:'#8a9bb5'},grid:{color:'#22304a'}},y:{ticks:{color:'#8a9bb5'},grid:{color:'#22304a'}}},plugins:{legend:{labels:{color:'#e8eef7'}}}};
-  charts.push(new Chart(hMarca,{type:'line',data:{labels:P,datasets:DS.track.map(m=>({label:m,data:P.map(p=>mOf(p,m)),borderColor:COL[m],tension:.3,borderWidth:3,pointRadius:5}))},options:ax}));
-  charts.push(new Chart(hTotal,{type:'line',data:{labels:P,datasets:[{label:fname(focus),data:P.map(tOf),borderColor:'#2f86ff',backgroundColor:'#2f86ff33',tension:.3,borderWidth:3,pointRadius:5,fill:true},{label:'País',data:P.map(p=>DS.by_period[p].total_pais),borderColor:'#8a9bb5',borderDash:[5,5],yAxisID:'y2',pointRadius:4}]},options:{...ax,scales:{...ax.scales,y2:{position:'right',ticks:{color:'#8a9bb5'},grid:{drawOnChartArea:false}}}}}));
-  charts.push(new Chart(hShare,{type:'line',data:{labels:P,datasets:DS.track.map(m=>({label:m,data:P.map(p=>pct(mOf(p,m),tOf(p))),borderColor:COL[m],tension:.3,borderWidth:3,pointRadius:5}))},options:{...ax,scales:{...ax.scales,y:{ticks:{color:'#8a9bb5',callback:v=>v+'%'}}}}}));
+  const etiquetas=P.map(p=>['ene','feb','mar','abr','may','jun','jul','ago','set','oct','nov','dic'][Number(p.slice(5))-1]);
+  const ax={scales:{x:{ticks:{color:'#8a9bb5',maxRotation:0,autoSkip:true},grid:{color:'#22304a'}},y:{ticks:{color:'#8a9bb5'},grid:{color:'#22304a'}}},plugins:{legend:{labels:{color:'#e8eef7'}}}};
+  charts.push(new Chart(hMarca,{type:'line',data:{labels:etiquetas,datasets:DS.track.map(m=>({label:m,data:P.map(p=>mOf(p,m)),borderColor:COL[m],spanGaps:false,tension:.3,borderWidth:3,pointRadius:5}))},options:ax}));
+  charts.push(new Chart(hTotal,{type:'line',data:{labels:etiquetas,datasets:[{label:fname(focus),data:P.map(tOf),borderColor:'#2f86ff',backgroundColor:'#2f86ff33',spanGaps:false,tension:.3,borderWidth:3,pointRadius:5,fill:true},{label:'País',data:P.map(p=>DS.by_period[p]?.total_pais??null),borderColor:'#8a9bb5',borderDash:[5,5],yAxisID:'y2',pointRadius:4}]},options:{...ax,scales:{...ax.scales,y2:{position:'right',ticks:{color:'#8a9bb5'},grid:{drawOnChartArea:false}}}}}));
+  charts.push(new Chart(hShare,{type:'line',data:{labels:etiquetas,datasets:DS.track.map(m=>({label:m,data:P.map(p=>(mOf(p,m)===null||!tOf(p)?null:pct(mOf(p,m),tOf(p)))),borderColor:COL[m],spanGaps:false,tension:.3,borderWidth:3,pointRadius:5}))},options:{...ax,scales:{...ax.scales,y:{ticks:{color:'#8a9bb5',callback:v=>v+'%'}}}}}));
 }
 
 /* ===== MI EMPRESA (el cliente carga sus ventas) ===== */
@@ -471,6 +494,9 @@ function switchView(v){
 }
 async function load(){
   const r=await fetch('dataset.json?t='+Date.now());DS=await r.json();
+  const [latestYear,latestMonth]=DS.latest.split('-').map(Number);
+  const previous=latestMonth===1?`${latestYear-1}-12`:`${latestYear}-${String(latestMonth-1).padStart(2,'0')}`;
+  DS.prev=DS.by_period[previous]?previous:null;
   if(!DS.deptos.includes(focus))focus=DS.default_focus||DS.deptos[0];
   const marcas=Object.keys(L().nac_marcas);
   if(!marcas.includes(marca))marca=marcas[0];
@@ -486,3 +512,4 @@ load();setInterval(load,300000);
 </script>
 </body>
 </html>
+

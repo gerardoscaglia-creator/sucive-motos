@@ -42,7 +42,7 @@ def parse_pdf(path):
     # El periodo SIEMPRE arranca el dia 01 (ej "01/05/2026"); la "Fecha de
     # actualizacion" no, asi evitamos confundirla con el periodo real.
     periodo = None
-    m = re.search(r"\b01/(\d{2})/(\d{4})", full)
+    m = re.search(r"Per[ií]odo\s*:?\s*01/(\d{2})/(\d{4})", full, re.I)
     if m:
         periodo = f"{m.group(2)}-{m.group(1)}"
     data = {}; subtotals = {}; cur = None
